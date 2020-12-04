@@ -8,7 +8,7 @@ with open("requirements.txt") as fp:
 
 setup(
     name="azurebatchload",
-    version="0.0.1",
+    version="0.0.2",
     author="Erfan Nariman",
     author_email="erfannariman@gmail.com",
     description="Download files in batches from Azure Blob Storage Containers",
@@ -18,7 +18,7 @@ setup(
     url="https://github.com/erfannariman/azure-batch",
     packages=find_packages(),
     install_requires=install_requires,
-    entry_points={"console_scripts": ["run=df_to_azure.export:run"]},
+    entry_points={"console_scripts": ["run=azurebatchload.download:DownloadBatch"]},
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
