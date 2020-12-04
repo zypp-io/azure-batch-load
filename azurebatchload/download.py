@@ -31,15 +31,3 @@ class DownloadBatch:
             os.makedirs(self.destination)
         else:
             logging.info("Destination directory already exists, skipping")
-
-
-if __name__ == "__main__":
-    key = "drlJSHUT3koBcNksnkF37ySg/gKioix+iaDCseFr814UNNHPUusmZw7v6VB7SxX1JXkyXlypgAj+Yy43kPigfg=="
-    az_batch = DownloadBatch(
-        destination="../pdfs",
-        source="loonspecificaties",
-        account_name="staffingassociates1",
-        account_key=key,
-        pattern="*.pdf",
-    )
-    az_batch.download()
