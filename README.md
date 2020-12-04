@@ -7,7 +7,7 @@ Note: Azure CLI has to be installed, [downloadlink](https://docs.microsoft.com/e
 Usage example:
 
 ```python
-from azurebatch import DownloadBatch
+from azurebatchload.download import DownloadBatch
 
 if __name__ == '__main__':
     key = 'ajh;sdhjhgjasdKioix+iaDSAJfafjh;waasd3k'

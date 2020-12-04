@@ -7,7 +7,7 @@ with open("requirements.txt") as fp:
     install_requires = fp.read()
 
 setup(
-    name="azurebatch",  # Replace with your own username
+    name="azurebatchload",
     version="0.0.1",
     author="Erfan Nariman",
     author_email="erfannariman@gmail.com",
