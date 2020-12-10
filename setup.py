@@ -8,14 +8,14 @@ with open("requirements.txt") as fp:
 
 setup(
     name="azurebatchload",
-    version="0.0.2",
+    version="0.0.3",
     author="Erfan Nariman",
-    author_email="erfannariman@gmail.com",
+    author_email="erfan@zypp.io",
     description="Download files in batches from Azure Blob Storage Containers",
     long_description=long_description,
     long_description_content_type="text/markdown",
     keywords="python, azure, blob, download, batch",
-    url="https://github.com/erfannariman/azure-batch",
+    url="https://github.com/zypp-io/azure-batch-load",
     packages=find_packages(),
     install_requires=install_requires,
     entry_points={"console_scripts": ["run=azurebatchload.download:DownloadBatch"]},
@@ -26,7 +26,7 @@ setup(
     ],
     python_requires=">=3.7",
     project_urls={
-        "Bug Reports": "https://github.com/erfannariman/azure-batch/issues",
-        "Source": "https://github.com/erfannariman/azure-batch",
+        "Bug Reports": "https://github.com/zypp-io/azure-batch-load/issues",
+        "Source": "https://github.com/zypp-io/azure-batch-load",
     },
 )
