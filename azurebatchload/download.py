@@ -36,20 +36,14 @@ class DownloadBatch(Checks):
     def download(self):
         self.checks()
 
-        cmd = (
-            f"az storage blob download-batch "
-            f"-d {self.destination} "
-            f"-s {self.source}"
-        )
+        cmd = f"az storage blob download-batch " f"-d {self.destination} " f"-s {self.source}"
 
         non_default = {
             "--connection-string": self.connection_string,
             "--pattern": self.pattern,
         }
 
-        global_parameters = {
-            "--verbose": self.verbose
-        }
+        global_parameters = {"--verbose": self.verbose}
 
         for flag, value in non_default.items():
             if value:
