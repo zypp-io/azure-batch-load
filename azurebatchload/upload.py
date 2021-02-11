@@ -12,7 +12,7 @@ class UploadBatch(Checks):
         account_name=None,
         pattern=None,
         modified_date=None,
-        verbose=False
+        verbose=False,
     ):
         super().__init__(connection_string, account_key, account_name, source)
         self.destination = destination
@@ -22,7 +22,7 @@ class UploadBatch(Checks):
         self.account_name = account_name
         self.pattern = pattern
         self.modified_date = modified_date
-        self.verbose=verbose
+        self.verbose = verbose
 
     def checks(self):
         # check for Azure CLI, credentials and existence dir.
@@ -35,19 +35,10 @@ class UploadBatch(Checks):
     def upload(self):
         self.checks()
 
-        cmd = (
-            f"az storage blob upload-batch "
-            f"-d {self.destination} "
-            f"-s {self.source}"
-        )
+        cmd = f"az storage blob upload-batch " f"-d {self.destination} " f"-s {self.source}"
 
-        non_default = {
-            "--connection-string": self.connection_string,
-            "--pattern": self.pattern
-        }
-        global_parameters = {
-            "--verbose": self.verbose
-        }
+        non_default = {"--connection-string": self.connection_string, "--pattern": self.pattern}
+        global_parameters = {"--verbose": self.verbose}
 
         for flag, value in non_default.items():
             if value:

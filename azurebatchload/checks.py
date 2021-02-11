@@ -6,7 +6,7 @@ from subprocess import check_output, CalledProcessError, STDOUT
 class Checks:
     def __init__(self, connection_string, account_key, account_name, directory):
         self.connection_string = connection_string
-        self.account_key = account_key,
+        self.account_key = (account_key,)
         self.account_name = account_name
         self.directory = directory
 
@@ -22,14 +22,16 @@ class Checks:
         if self.connection_string or os.environ.get("AZURE_STORAGE_CONNECTION_STRING"):
             return True
         elif all([self.account_key, self.account_name]) or all(
-                [os.environ.get("account_key", None), os.environ.get("account_name", None)]
-            ):
+            [os.environ.get("account_key", None), os.environ.get("account_name", None)]
+        ):
             return True
         else:
-            # if account_key and account_name arguments are not set, check for env variables else raise
+            # if account_key and account_name arguments are not set,
+            #   check for env variables else raise
             raise ValueError(
-                "If account_key and account_name are not given as argument they have to be specified as "
-                "environment variables named AZURE_STORAGE_KEY and AZURE_STORAGE_ACCOUNT"
+                "If account_key and account_name are not given as argument "
+                "they have to be specified as environment variables named "
+                " AZURE_STORAGE_KEY and AZURE_STORAGE_ACCOUNT"
             )
 
     def _check_dir(self):
