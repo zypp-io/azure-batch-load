@@ -26,7 +26,7 @@ So if the connection_string or storage_key + storage_account are set as environm
 
 ```python
 import os
-from azurebatchload.download import DownloadBatch
+from azurebatchload import DownloadBatch
 
 if __name__ == '__main__':
     az_batch = DownloadBatch(
@@ -44,7 +44,7 @@ and `account_name` in our function:
 
 ```python
 import os
-from azurebatchload.download import DownloadBatch
+from azurebatchload import DownloadBatch
 
 if __name__ == '__main__':
     az_batch = DownloadBatch(
@@ -60,7 +60,7 @@ Or with key and name:
 
 ```python
 import os
-from azurebatchload.download import DownloadBatch
+from azurebatchload import DownloadBatch
 
 if __name__ == '__main__':
     az_batch = DownloadBatch(
@@ -71,6 +71,26 @@ if __name__ == '__main__':
         pattern='*.pdf'
     )
     az_batch.download()
+```
+
+---
+
+### Usage example upload:
+
+#### 1. Using the standard environment variables
+
+```python
+import os
+from azurebatchload import UploadBatch
+
+if __name__ == '__main__':
+    az_batch = UploadBatch(
+        destination='blobcontainername',
+        source='../pdf',
+        pattern='*.pdf'
+    )
+    az_batch.upload()
+
 ```
 
 ---
