@@ -27,10 +27,8 @@ class UploadBatch(Checks):
     def checks(self):
         # check for Azure CLI, credentials and existence dir.
         self._check_azure_cli_installed()
-        check_connection_credentials = self._check_connection_credentials()
+        self.connection_string = self._check_connection_credentials()
         self._check_dir()
-        if not self.connection_string and not check_connection_credentials:
-            self.connection_string = self._create_connection_string()
 
     def upload(self):
         self.checks()
