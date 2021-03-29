@@ -11,20 +11,28 @@ class Checks:
         self.directory = directory
 
     def _create_connection_string(self):
-        connection_string = (
+
+        base_string = (
             "DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};"
-            "EndpointSuffix=core.windows.net".format(self.account_name, self.account_key)
+            "EndpointSuffix=core.windows.net"
         )
+
+        if self.account_name and self.account_key:
+            connection_string = base_string.format(self.account_name, self.account_key)
+        else:
+            connection_string = base_string.format(os.environ.get("account_key", None), os.environ.get("account_name", None))
 
         return connection_string
 
     def _check_connection_credentials(self):
-        if self.connection_string or os.environ.get("AZURE_STORAGE_CONNECTION_STRING"):
-            return True
+        if self.connection_string:
+            return self.connection_string
+        if os.environ.get("AZURE_STORAGE_CONNECTION_STRING", None):
+            return os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
         elif all([self.account_key, self.account_name]) or all(
             [os.environ.get("account_key", None), os.environ.get("account_name", None)]
         ):
-            return True
+            return self._create_connection_string()
         else:
             # if account_key and account_name arguments are not set,
             #   check for env variables else raise
@@ -38,10 +46,13 @@ class Checks:
         if not os.path.exists(self.directory):
             raise FileNotFoundError(f"Source directory {self.directory} not found")
 
-    def _create_dir(self):
-        if not os.path.exists(self.directory):
-            logging.info(f"Destination {self.directory} does not exist, creating..")
-            os.makedirs(self.directory)
+    def _create_dir(self, directory=None):
+        if not directory:
+            directory = self.directory
+
+        if not os.path.exists(directory):
+            logging.info(f"Destination {directory} does not exist, creating..")
+            os.makedirs(directory)
         else:
             logging.info("Destination directory already exists, skipping")
 
@@ -49,5 +60,9 @@ class Checks:
     def _check_azure_cli_installed():
         try:
             check_output(["az", "--version"], stderr=STDOUT, shell=True)
+            return True
         except CalledProcessError:
-            print("Azure CLI is not installed, please install before using azurebatchload")
+            logging.warning(
+                "Azure CLI is not installed, automatically setting method to 'single'"
+            )
+            return False
