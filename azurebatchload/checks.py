@@ -20,7 +20,9 @@ class Checks:
         if self.account_name and self.account_key:
             connection_string = base_string.format(self.account_name, self.account_key)
         else:
-            connection_string = base_string.format(os.environ.get("account_key", None), os.environ.get("account_name", None))
+            connection_string = base_string.format(
+                os.environ.get("account_key", None), os.environ.get("account_name", None)
+            )
 
         return connection_string
 
@@ -62,7 +64,5 @@ class Checks:
             check_output(["az", "--version"], stderr=STDOUT, shell=True)
             return True
         except CalledProcessError:
-            logging.warning(
-                "Azure CLI is not installed, automatically setting method to 'single'"
-            )
+            logging.warning("Azure CLI is not installed, automatically setting method to 'single'")
             return False

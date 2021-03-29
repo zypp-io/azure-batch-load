@@ -40,7 +40,10 @@ class DownloadBatch(Checks):
 
         allowed_methods = ("batch", "single")
         if self.method not in allowed_methods:
-            raise ValueError(f"Method {self.method} is not a valid method. Choose from {' or '.join(allowed_methods)}.")
+            raise ValueError(
+                f"Method {self.method} is not a valid method. "
+                f"Choose from {' or '.join(allowed_methods)}."
+            )
 
         if not self.folder.endswith("/"):
             self.folder = self.folder + "/"
