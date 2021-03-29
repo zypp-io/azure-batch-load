@@ -49,11 +49,12 @@ class DownloadBatch(Checks):
             self.folder = self.folder + "/"
 
     def define_pattern(self):
-        self.extension = self.create_not_case_sensitive_extension()
+        if self.extension:
+            self.extension = self.create_not_case_sensitive_extension()
         if self.folder and self.extension:
             pattern = self.folder + "*" + self.extension
         elif self.folder and not self.extension:
-            pattern = self.folder
+            pattern = self.folder + "*"
         elif not self.folder and self.extension:
             pattern = "*" + self.extension
         else:
