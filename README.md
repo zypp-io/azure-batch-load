@@ -32,10 +32,10 @@ import os
 from azurebatchload import DownloadBatch
 
 DownloadBatch(
-     destination='../pdfs',
-     source='blobcontainername',
-     extension='.pdf'
- ).download()
+   destination='../pdfs',
+   source='blobcontainername',
+   extension='.pdf'
+).download()
 ```
 
 #### 2. Using `method="single"`
