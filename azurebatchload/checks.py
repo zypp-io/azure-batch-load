@@ -21,7 +21,8 @@ class Checks:
             connection_string = base_string.format(self.account_name, self.account_key)
         else:
             connection_string = base_string.format(
-                account_name=os.environ.get("AZURE_STORAGE_ACCOUNT", None), account_key=os.environ.get("AZURE_STORAGE_KEY", None)
+                account_name=os.environ.get("AZURE_STORAGE_ACCOUNT", None),
+                account_key=os.environ.get("AZURE_STORAGE_KEY", None),
             )
 
         return connection_string
@@ -32,7 +33,10 @@ class Checks:
         if os.environ.get("AZURE_STORAGE_CONNECTION_STRING", None):
             return os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
         elif all([self.account_key, self.account_name]) or all(
-            [os.environ.get("AZURE_STORAGE_KEY", None), os.environ.get("AZURE_STORAGE_ACCOUNT", None)]
+            [
+                os.environ.get("AZURE_STORAGE_KEY", None),
+                os.environ.get("AZURE_STORAGE_ACCOUNT", None),
+            ]
         ):
             return self._create_connection_string()
         else:
