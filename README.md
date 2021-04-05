@@ -7,9 +7,17 @@ The only option in the Azure Storage Python SDK is downloading file by file, whi
 Besides doing loads in batches, since version `0.5.0` it's possible to set method to `single` which will use the 
 Azure Python SDK to process files one by one.
 
+
+# Installation
+
+```commandline
+pip install azurebatchload
+```
+
+See [PyPi](https://pypi.org/project/azurebatchload/) for package index.
+
 **Note**: Azure CLI has to be [installed](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
 and [configured](https://docs.microsoft.com/en-us/cli/azure/get-started-with-azure-cli).
-
 Check if Azure CLI is installed through terminal:
 
 ```commandline
