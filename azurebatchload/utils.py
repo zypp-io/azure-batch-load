@@ -7,6 +7,7 @@ class Utils(Checks):
     def __init__(
         self,
         container,
+        name_starts_with=None,
         dataframe=False,
         extended_info=False,
         connection_string=None,
@@ -16,6 +17,7 @@ class Utils(Checks):
     ):
         super().__init__(connection_string, account_key, account_name, directory=None)
         self.container = container
+        self.name_starts_with = name_starts_with
         self.dataframe = dataframe
         self.extended_info = extended_info
         self.connection_string = connection_string
@@ -27,12 +29,12 @@ class Utils(Checks):
     def checks(self):
         self.connection_string = self._check_connection_credentials()
 
-    def list_files(self):
+    def list_blobs(self):
         blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
         container_client = blob_service_client.get_container_client(self.container)
-        files = container_client.list_blobs(name_starts_with="Productiviteit")
+        files = container_client.list_blobs(name_starts_with=self.name_starts_with)
 
-        included_info = ("name", "container", "last_modified", "size")
+        included_info = ("name", "container", "last_modified", "creation_time", "size")
         # we have 4 options to return:
         # extended_info = False
         if not self.extended_info:
@@ -56,4 +58,9 @@ class Utils(Checks):
                 return new_file_list
             # 4. dataframe = True, return dataframe
             else:
-                return DataFrame(new_file_list)
+                df = DataFrame(new_file_list)
+                df = df.reindex(columns=included_info)
+                # convert size to mb
+                df["size"] = (df["size"] / 1_000_000).round(2)
+                df = df.rename(columns={"size": "size_mb"})
+                return df
