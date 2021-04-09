@@ -163,7 +163,7 @@ df_blobs = Utils(
 ).list_blobs()
 ```
 
-### 2. List a folder in a container.
+### 3. List a folder in a container.
 ```python
 from azurebatchload import Utils
 
@@ -173,7 +173,7 @@ list_blobs = Utils(
 ).list_blobs()
 ```
 
-### 3. Get extended information a folder.
+### 4. Get extended information a folder.
 ```python
 from azurebatchload import Utils
 
@@ -184,7 +184,7 @@ dict_blobs = Utils(
 ).list_blobs()
 ```
 
-### 4. Get extended information a folder returned as a pandas dataframe.
+### 5. Get extended information a folder returned as a pandas dataframe.
 ```python
 from azurebatchload import Utils
 
