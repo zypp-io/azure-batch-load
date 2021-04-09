@@ -115,7 +115,6 @@ az_batch = DownloadBatch(
 ### 1. Using the standard environment variables
 
 ```python
-import os
 from azurebatchload import UploadBatch
 
 UploadBatch(
@@ -128,7 +127,6 @@ UploadBatch(
 ### 2. Using the `method="single"` method which does not require Azure CLI.
 
 ```python
-import os
 from azurebatchload import UploadBatch
 
 UploadBatch(
@@ -139,6 +137,61 @@ UploadBatch(
 ).upload()
 ```
 
----
+## List blobs
 
-For more information about file pattern matching in the `pattern` argument, see [Python Documentation](https://docs.python.org/3.7/library/fnmatch.html).
+With the `Utils.list_blobs` method we can do advanced listing of blobs in a container or specific folder in a container. 
+We have several argument we can use to define our scope of information:
+
+- `name_starts_with`: This can be used to filter files with certain prefix, or to select certain folders: `name_starts_with=folder1/subfolder/lastfolder/`
+- `dataframe`: Define if you want a pandas dataframe object returned for your information.
+- `extended_info`: Get just the blob names or more extended information like size, creation date, modified date.
+
+### 1. List a whole container with just the filenames as a list.
+```python
+from azurebatchload import Utils
+
+list_blobs = Utils(container='containername').list_blobs()
+```
+
+### 2. List a whole container with just the filenames as a dataframe.
+```python
+from azurebatchload import Utils
+
+df_blobs = Utils(
+   container='containername',
+   dataframe=True
+).list_blobs()
+```
+
+### 3. List a folder in a container.
+```python
+from azurebatchload import Utils
+
+list_blobs = Utils(
+   container='containername',
+   name_starts_with="foldername/"
+).list_blobs()
+```
+
+### 4. Get extended information a folder.
+```python
+from azurebatchload import Utils
+
+dict_blobs = Utils(
+   container='containername',
+   name_starts_with="foldername/",
+   extended_info=True
+).list_blobs()
+```
+
+### 5. Get extended information a folder returned as a pandas dataframe.
+```python
+from azurebatchload import Utils
+
+df_blobs = Utils(
+   container='containername',
+   name_starts_with="foldername/",
+   extended_info=True,
+   dataframe=True
+).list_blobs()
+```
