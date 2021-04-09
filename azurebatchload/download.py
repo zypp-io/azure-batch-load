@@ -82,7 +82,6 @@ class DownloadBatch(Checks):
 
         # for batch load we use the Azure CLI
         if self.method == "batch":
-
             pattern = self.define_pattern()
 
             cmd = f"az storage blob download-batch " f"-d {self.destination} " f"-s {self.source}"
@@ -102,7 +101,6 @@ class DownloadBatch(Checks):
                     cmd = f"{cmd} {flag}"
 
             os.system(cmd)
-
         # for single load we use Python SDK
         else:
             blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
