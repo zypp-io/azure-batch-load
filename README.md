@@ -123,8 +123,8 @@ from azurebatchload import UploadBatch
 
 UploadBatch(
    destination='blobcontainername',
-   source='../pdf',
-   pattern='*.pdf'
+   folder='../pdf',
+   extension='*.pdf'
 ).upload()
 ```
 
