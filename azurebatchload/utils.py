@@ -1,5 +1,3 @@
-import os
-import subprocess
 from pandas import DataFrame
 from azure.storage.blob import BlobServiceClient
 from azurebatchload.checks import Checks
@@ -7,7 +5,14 @@ from azurebatchload.checks import Checks
 
 class Utils(Checks):
     def __init__(
-        self, container, dataframe=False, extended_info=False, connection_string=None, account_key=None, account_name=None, verbose=None
+        self,
+        container,
+        dataframe=False,
+        extended_info=False,
+        connection_string=None,
+        account_key=None,
+        account_name=None,
+        verbose=None,
     ):
         super().__init__(connection_string, account_key, account_name, directory=None)
         self.container = container
@@ -23,9 +28,7 @@ class Utils(Checks):
         self.connection_string = self._check_connection_credentials()
 
     def list_files(self):
-        blob_service_client = BlobServiceClient.from_connection_string(
-            self.connection_string
-        )
+        blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
         container_client = blob_service_client.get_container_client(self.container)
         files = container_client.list_blobs(name_starts_with="Productiviteit")
 
