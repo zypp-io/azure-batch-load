@@ -5,7 +5,7 @@ in the Python SDK of Azure Storage since there is no possibility to download or 
 The only option in the Azure Storage Python SDK is downloading file by file, which takes a lot of time.
 
 Besides doing loads in batches, since version `0.5.0` it's possible to set method to `single` which will use the 
-Azure Python SDK to process files one by one.
+[Azure Python SDK](https://github.com/Azure/azure-sdk-for-python/tree/master/sdk/storage/azure-storage-blob) to process files one by one.
 
 
 # Installation
@@ -16,7 +16,7 @@ pip install azurebatchload
 
 See [PyPi](https://pypi.org/project/azurebatchload/) for package index.
 
-**Note**: Azure CLI has to be [installed](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+**Note**: For batch uploads (`method="batch"`) Azure CLI has to be [installed](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
 and [configured](https://docs.microsoft.com/en-us/cli/azure/get-started-with-azure-cli).
 Check if Azure CLI is installed through terminal:
 
@@ -24,11 +24,10 @@ Check if Azure CLI is installed through terminal:
 az --version
 ```
 
----
+# Usage
 
-### Usage example Download:
-
-#### 1. Using the standard environment variables
+## Download
+### 1. Using the standard environment variables
 
 Azure-batch-load automatically checks for environment variables: `AZURE_STORAGE_CONNECTION_STRING`, 
    `AZURE_STORAGE_KEY`and `AZURE_STORAGE_ACCOUNT`. 
@@ -46,7 +45,7 @@ DownloadBatch(
 ).download()
 ```
 
-#### 2. Using `method="single"`
+### 2. Using `method="single"`
 
 We can make skip the usage of the `Azure CLI` and just make use Python SDK by setting the `method="single"`:
 
@@ -61,7 +60,7 @@ DownloadBatch(
 )
 ```
 
-#### 3. Download a specific folder from a container
+### 3. Download a specific folder from a container
 
 We can download a folder by setting the `folder` argument. This works both for `single` and `batch`.
 
@@ -77,7 +76,7 @@ DownloadBatch(
 )
 ```
 
-#### 4. Using own environment variables
+### 4. Using own environment variables
 
 If we use other names for the environment variables, we can define the arguments `connection_string`, `account_key` 
 and `account_name` in our function:
@@ -111,11 +110,9 @@ az_batch = DownloadBatch(
 ).download()
 ```
 
----
+## Upload:
 
-### Usage example upload:
-
-#### 1. Using the standard environment variables
+### 1. Using the standard environment variables
 
 ```python
 import os
@@ -125,6 +122,20 @@ UploadBatch(
    destination='blobcontainername',
    folder='../pdf',
    extension='*.pdf'
+).upload()
+```
+
+### 2. Using the `method="single"` method which does not require Azure CLI.
+
+```python
+import os
+from azurebatchload import UploadBatch
+
+UploadBatch(
+   destination='blobcontainername',
+   folder='../pdf',
+   extension='*.pdf',
+   method="single"
 ).upload()
 ```
 
