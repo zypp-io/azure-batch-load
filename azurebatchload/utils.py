@@ -11,9 +11,7 @@ class Utils(Checks):
         dataframe=False,
         extended_info=False,
     ):
-        super(Utils, self).__init__(
-            directory=None
-        )
+        super(Utils, self).__init__(directory=None)
         self.container = container
         self.name_starts_with = name_starts_with
         self.dataframe = dataframe

@@ -20,7 +20,7 @@ class Download(Base):
             folder=folder,
             extension=extension,
             modified_since=modified_since,
-            method=method
+            method=method,
         )
         self.checks()
         self.source = source

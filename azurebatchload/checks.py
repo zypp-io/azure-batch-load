@@ -40,7 +40,12 @@ class Checks:
         """
         if os.environ.get("AZURE_STORAGE_CONNECTION_STRING", None):
             return os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
-        elif all([os.environ.get("AZURE_STORAGE_KEY", None), os.environ.get("AZURE_STORAGE_ACCOUNT", None),]):
+        elif all(
+            [
+                os.environ.get("AZURE_STORAGE_KEY", None),
+                os.environ.get("AZURE_STORAGE_ACCOUNT", None),
+            ]
+        ):
             return self._create_connection_string()
         else:
             # check for env variables else raise

@@ -2,17 +2,8 @@ from azurebatchload.checks import Checks
 
 
 class Base(Checks):
-    def __init__(
-        self,
-        destination,
-        folder,
-        extension=None,
-        modified_since=None,
-        method="batch"
-    ):
-        super().__init__(
-            directory=folder
-        )
+    def __init__(self, destination, folder, extension=None, modified_since=None, method="batch"):
+        super().__init__(directory=folder)
 
         self.destination = destination
         self.folder = folder
