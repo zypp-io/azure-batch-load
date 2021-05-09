@@ -1,102 +1,61 @@
+import logging
 import os
 from azure.storage.blob import BlobServiceClient
-from azurebatchload.checks import Checks
+from azurebatchload.core import Base
 
 
-class UploadBatch(Checks):
+class Upload(Base):
     def __init__(
         self,
         destination,
-        folder=None,
+        source=None,
         extension=None,
-        connection_string=None,
-        account_key=None,
-        account_name=None,
-        modified_date=None,
-        verbose=False,
         method="batch",
+        modified_since=None,
+        overwrite=False
     ):
-        super().__init__(connection_string, account_key, account_name, folder)
-        self.destination = destination
-        self.folder = folder
-        self.extension = extension
-        self.connection_string = connection_string
-        self.account_key = account_key
-        self.account_name = account_name
-        self.modified_date = modified_date
-        self.verbose = verbose
-        if not self._check_azure_cli_installed():
-            self.method = "single"
-        else:
-            self.method = method
-
-    def checks(self):
-        self.connection_string = self._check_connection_credentials()
-        self._check_dir()
-
-        allowed_methods = ("batch", "single")
-        if self.method not in allowed_methods:
-            raise ValueError(
-                f"Method {self.method} is not a valid method. "
-                f"Choose from {' or '.join(allowed_methods)}."
-            )
-
-    def define_pattern(self):
-        if self.extension:
-            self.extension = self.create_not_case_sensitive_extension()
-        if self.folder and self.extension:
-            pattern = self.folder + "*" + self.extension
-        elif self.folder and not self.extension:
-            pattern = self.folder + "*"
-        elif not self.folder and self.extension:
-            pattern = "*" + self.extension
-        else:
-            pattern = None
-
-        return pattern
-
-    def create_not_case_sensitive_extension(self):
-        """
-        We create in-case sensitive fnmatch
-        .pdf -> .[Pp][Dd][Ff]
-        .csv -> .[Cc][Ss][Vv]
-        """
-        new_extension = ""
-        for letter in self.extension:
-            if not letter.isalpha():
-                new_extension += letter
-            else:
-                new_extension += f"[{letter.upper()}{letter}]"
-
-        if not new_extension.startswith("*"):
-            new_extension = "*" + new_extension
-
-        return new_extension
+        super(Upload, self).__init__(
+            destination=destination,
+            folder=source,
+            extension=extension,
+            modified_since=modified_since,
+            method=method
+        )
+        self.overwrite = overwrite
 
     def upload(self):
         self.checks()
 
         if self.method == "batch":
-            pattern = self.create_not_case_sensitive_extension()
+            logging.info(f"Uploading to container {self.destination} method = 'batch'.")
+            pattern = self.define_pattern().rsplit("/", 1)[-1]
             cmd = f"az storage blob upload-batch " f"-d {self.destination} " f"-s {self.folder}"
 
-            non_default = {"--connection-string": self.connection_string, "--pattern": pattern}
-            global_parameters = {"--verbose": self.verbose}
+            non_default = {
+                "--connection-string": self.connection_string,
+                "--pattern": pattern
+            }
 
             for flag, value in non_default.items():
                 if value:
                     cmd = f"{cmd} {flag} '{value}'"
 
-            for flag, value in global_parameters.items():
-                if value:
-                    cmd = f"{cmd} {flag}"
-
             os.system(cmd)
         else:
+            logging.info(f"Uploading container {self.destination} with method = 'single'.")
             blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
-            container_client = blob_service_client.get_container_client(container=self.destination)
-            for file in os.listdir(self.folder):
-                if file.lower().endswith(self.extension.lower()):
-                    file_path = os.path.join(self.folder, file)
-                    with open(file_path, "rb") as data:
-                        container_client.upload_blob(data=data, name=file)
+
+            for root, dirs, files in os.walk(self.folder):
+                for file in files:
+                    full_path = os.path.join(root, file)
+                    container_client = blob_service_client.get_container_client(container=os.path.join(self.destination, full_path))
+                    # if extensions is given, only upload matching files.
+                    if self.extension and os.path.isfile(full_path) and file.lower().endswith(self.extension.lower()):
+                        with open(full_path, "rb") as data:
+                            logging.info(f"Uploading blob {full_path}")
+                            container_client.upload_blob(data=data, name=file, overwrite=self.overwrite)
+                    else:
+                        if not file.startswith("."):
+                            with open(full_path, "rb") as data:
+                                logging.info(f"Uploading blob {full_path}")
+                                container_client.upload_blob(data=data, name=file, overwrite=self.overwrite)

@@ -4,7 +4,7 @@ This project aims to be the [missing functionality](https://github.com/Azure/azu
 in the Python SDK of Azure Storage since there is no possibility to download or upload batches of files from or to containers.
 The only option in the Azure Storage Python SDK is downloading file by file, which takes a lot of time.
 
-Besides doing loads in batches, since version `0.5.0` it's possible to set method to `single` which will use the 
+Besides doing loads in batches, since version `0.0.5` it's possible to set method to `single` which will use the 
 [Azure Python SDK](https://github.com/Azure/azure-sdk-for-python/tree/master/sdk/storage/azure-storage-blob) to process files one by one.
 
 
@@ -24,6 +24,11 @@ Check if Azure CLI is installed through terminal:
 az --version
 ```
 
+# Requirements
+
+Azure Storage connection string has to be set as environment variable `AZURE_STORAGE_CONNECTION_STRING` or 
+the seperate environment variables `AZURE_STORAGE_KEY` and `AZURE_STORAGE_NAME` which will be used to create the connection string.
+
 # Usage
 
 ## Download
@@ -36,9 +41,9 @@ So if the connection_string or storage_key + storage_account are set as environm
 
 ```python
 import os
-from azurebatchload import DownloadBatch
+from azurebatchload import Download
 
-DownloadBatch(
+Download(
    destination='../pdfs',
    source='blobcontainername',
    extension='.pdf'
@@ -50,9 +55,9 @@ DownloadBatch(
 We can make skip the usage of the `Azure CLI` and just make use Python SDK by setting the `method="single"`:
 
 ```python
-from azurebatchload import DownloadBatch
+from azurebatchload import Download
 
-DownloadBatch(
+Download(
    destination='../pdfs',
    source='blobcontainername',
    extension='.pdf',
@@ -65,9 +70,9 @@ DownloadBatch(
 We can download a folder by setting the `folder` argument. This works both for `single` and `batch`.
 
 ```python
-from azurebatchload import DownloadBatch
+from azurebatchload import Download
 
-DownloadBatch(
+Download(
    destination='../pdfs',
    source='blobcontainername',
    folder='uploads/invoices/',
@@ -76,50 +81,16 @@ DownloadBatch(
 )
 ```
 
-### 4. Using own environment variables
-
-If we use other names for the environment variables, we can define the arguments `connection_string`, `account_key` 
-and `account_name` in our function:
-
-```python
-import os
-from azurebatchload import DownloadBatch
-
-
-DownloadBatch(
-   destination='../pdfs',
-   source='blobcontainername',
-   connection_string=os.environ.get("connection_string"),
-   extension='.pdf'
-).download()
-```
-
-Or with key and name:
-
-```python
-import os
-from azurebatchload import DownloadBatch
-
-
-az_batch = DownloadBatch(
-   destination='../pdfs',
-   source='blobcontainername',
-   account_key=os.environ.get("account_key"),
-   account_name=os.environ.get("account_name"),
-   extension='.pdf'
-).download()
-```
-
 ## Upload:
 
 ### 1. Using the standard environment variables
 
 ```python
-from azurebatchload import UploadBatch
+from azurebatchload import Upload
 
-UploadBatch(
+Upload(
    destination='blobcontainername',
-   folder='../pdf',
+   source='../pdf',
    extension='*.pdf'
 ).upload()
 ```
@@ -127,11 +98,11 @@ UploadBatch(
 ### 2. Using the `method="single"` method which does not require Azure CLI.
 
 ```python
-from azurebatchload import UploadBatch
+from azurebatchload import Upload
 
-UploadBatch(
+Upload(
    destination='blobcontainername',
-   folder='../pdf',
+   source='../pdf',
    extension='*.pdf',
    method="single"
 ).upload()

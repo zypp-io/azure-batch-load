@@ -4,63 +4,79 @@ from subprocess import check_output, CalledProcessError, STDOUT
 
 
 class Checks:
-    def __init__(self, connection_string, account_key, account_name, directory):
-        self.connection_string = connection_string
-        self.account_key = (account_key,)
-        self.account_name = account_name
+    def __init__(self, directory):
         self.directory = directory
 
     def _create_connection_string(self):
+        """
+        When AZURE_STORAGE_ACCOUNT and AZURE_STORAGE_KEY are given,
+        create an AZURE_STORAGE_CONNECTION_STRING
 
+        Returns
+        -------
+        connection_string
+        """
         base_string = (
             "DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={account_key};"
             "EndpointSuffix=core.windows.net"
         )
-
-        if self.account_name and self.account_key:
-            connection_string = base_string.format(self.account_name, self.account_key)
-        else:
-            connection_string = base_string.format(
-                account_name=os.environ.get("AZURE_STORAGE_ACCOUNT", None),
-                account_key=os.environ.get("AZURE_STORAGE_KEY", None),
-            )
+        connection_string = base_string.format(
+            account_name=os.environ.get("AZURE_STORAGE_ACCOUNT", None),
+            account_key=os.environ.get("AZURE_STORAGE_KEY", None),
+        )
 
         return connection_string
 
     def _check_connection_credentials(self):
-        if self.connection_string:
-            return self.connection_string
+        """
+        If connection string is given as env variable return it,
+        else the connection string is generated from storage key and name.
+
+        If none of the above are given, raise.
+
+        Returns
+        -------
+        AZURE_STORAGE_CONNECTION_STRING
+        """
         if os.environ.get("AZURE_STORAGE_CONNECTION_STRING", None):
             return os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
-        elif all([self.account_key, self.account_name]) or all(
-            [
-                os.environ.get("AZURE_STORAGE_KEY", None),
-                os.environ.get("AZURE_STORAGE_ACCOUNT", None),
-            ]
-        ):
+        elif all([os.environ.get("AZURE_STORAGE_KEY", None), os.environ.get("AZURE_STORAGE_ACCOUNT", None),]):
             return self._create_connection_string()
         else:
-            # if account_key and account_name arguments are not set,
-            #   check for env variables else raise
+            # check for env variables else raise
             raise ValueError(
-                "If account_key and account_name are not given as argument "
-                "they have to be specified as environment variables named "
-                " AZURE_STORAGE_KEY and AZURE_STORAGE_ACCOUNT"
+                "If AZURE_STORAGE_CONNECTION_STRING is not set as env variable "
+                " AZURE_STORAGE_KEY and AZURE_STORAGE_ACCOUNT have to be set."
             )
 
     def _check_dir(self):
+        """
+        When downloading files, create the given directory if it does not exist.
+
+        Returns
+        -------
+        None
+        """
         if not os.path.exists(self.directory):
             raise FileNotFoundError(f"Source directory {self.directory} not found")
 
     def _create_dir(self, directory=None):
+        """
+
+        Parameters
+        ----------
+        directory
+
+        Returns
+        -------
+
+        """
         if not directory:
             directory = self.directory
 
         if not os.path.exists(directory):
             logging.info(f"Destination {directory} does not exist, creating..")
             os.makedirs(directory)
-        else:
-            logging.info("Destination directory already exists, skipping")
 
     @staticmethod
     def _check_azure_cli_installed():

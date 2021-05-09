@@ -10,23 +10,14 @@ class Utils(Checks):
         name_starts_with=None,
         dataframe=False,
         extended_info=False,
-        connection_string=None,
-        account_key=None,
-        account_name=None,
-        verbose=None,
     ):
-        super().__init__(connection_string, account_key, account_name, directory=None)
+        super(Utils, self).__init__(
+            directory=None
+        )
         self.container = container
         self.name_starts_with = name_starts_with
         self.dataframe = dataframe
         self.extended_info = extended_info
-        self.connection_string = connection_string
-        self.account_key = account_key
-        self.account_name = account_name
-        self.verbose = verbose
-        self.checks()
-
-    def checks(self):
         self.connection_string = self._check_connection_credentials()
 
     def list_blobs(self):
