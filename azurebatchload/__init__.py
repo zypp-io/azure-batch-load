@@ -1,6 +1,6 @@
 import logging
-from azurebatchload.download import DownloadBatch
-from azurebatchload.upload import UploadBatch
+from azurebatchload.download import Download
+from azurebatchload.upload import Upload
 from azurebatchload.utils import Utils
 
 
