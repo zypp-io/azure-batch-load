@@ -39,14 +39,14 @@ class Upload(Base):
 
             os.system(cmd)
         else:
-            logging.info(f"Uploading container {self.destination} with method = 'single'.")
+            logging.info(f"Uploading to container {self.destination} with method = 'single'.")
             blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
 
             for root, dirs, files in os.walk(self.folder):
                 for file in files:
                     full_path = os.path.join(root, file)
                     container_client = blob_service_client.get_container_client(
-                        container=os.path.join(self.destination, full_path)
+                        container=os.path.join(self.destination, full_path.replace(file, "")[:-1])
                     )
                     # if extensions is given, only upload matching files.
                     if (
