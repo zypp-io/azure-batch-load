@@ -2,7 +2,15 @@ from azurebatchload.checks import Checks
 
 
 class Base(Checks):
-    def __init__(self, destination, folder, extension=None, modified_since=None, method="batch"):
+    def __init__(
+        self,
+        destination,
+        folder,
+        extension=None,
+        modified_since=None,
+        method="batch",
+        list_files=None,
+    ):
         super().__init__(directory=folder)
 
         self.destination = destination
@@ -17,6 +25,7 @@ class Base(Checks):
             self.method = "single"
         else:
             self.method = method
+        self.list_files = list_files
         self.connection_string = self._check_connection_credentials()
 
     def checks(self):
@@ -25,6 +34,15 @@ class Base(Checks):
             raise ValueError(
                 f"Method {self.method} is not a valid method. "
                 f"Choose from {' or '.join(allowed_methods)}."
+            )
+
+        if self.list_files and self.method == "batch":
+            raise ValueError("list_files is only allowed with method='single'.")
+
+        if self.list_files and not isinstance(self.list_files, list):
+            raise ValueError(
+                f"Argument list_files was set, but is not of type list, "
+                f"but type {type(self.list_files)}"
             )
 
     @staticmethod

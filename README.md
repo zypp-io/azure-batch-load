@@ -81,6 +81,23 @@ Download(
 )
 ```
 
+### 4. Download a given list of files
+
+We can give a list of files to download with the `list_files` argument. 
+Note, this only works with `method='single'`.
+
+```python
+from azurebatchload import Download
+
+Download(
+   destination='../pdfs',
+   source='blobcontainername',
+   folder='uploads/invoices/',
+   list_files=["invoice1.pdf", "invoice2.pdf"],
+   method='single'
+)
+```
+
 ## Upload:
 
 ### 1. Using the standard environment variables
@@ -104,6 +121,19 @@ Upload(
    destination='blobcontainername',
    source='../pdf',
    extension='*.pdf',
+   method="single"
+).upload()
+```
+
+### 3. Upload a given list of files with the `list_files` argument.
+
+```python
+from azurebatchload import Upload
+
+Upload(
+   destination='blobcontainername',
+   source='../pdf',
+   list_files=["invoice1.pdf", "invoice2.pdf"],
    method="single"
 ).upload()
 ```

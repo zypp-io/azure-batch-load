@@ -14,6 +14,7 @@ class Download(Base):
         method="batch",
         modified_since=None,
         create_dir=True,
+        list_files=None,
     ):
         super(Download, self).__init__(
             destination=destination,
@@ -21,6 +22,7 @@ class Download(Base):
             extension=extension,
             modified_since=modified_since,
             method=method,
+            list_files=list_files,
         )
         self.checks()
         self.source = source
@@ -56,9 +58,13 @@ class Download(Base):
             for blob in blob_list:
                 if self.extension and not blob.name.lower().endswith(self.extension.lower()):
                     continue
-                blob_client = container_client.get_blob_client(blob=blob.name)
 
-                directory = os.path.join(self.destination, blob.name.rsplit("/", 1)[0])
+                file_path, file_name = blob.name.rsplit("/", 1)
+
+                if self.list_files and file_name not in self.list_files:
+                    continue
+                blob_client = container_client.get_blob_client(blob=blob.name)
+                directory = os.path.join(self.destination, file_path)
                 directory = os.path.abspath(directory)
                 self._create_dir(directory)
                 logging.info(f"Downloading file {blob.name}")
