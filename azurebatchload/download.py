@@ -25,7 +25,10 @@ class Download(Base):
         self.checks()
         self.source = source
         if create_dir:
-            self._create_dir()
+            if self.folder:
+                self._create_dir(os.path.join(self.destination, self.folder))
+            else:
+                self._create_dir(self.destination)
 
     def download(self):
 
