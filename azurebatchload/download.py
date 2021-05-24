@@ -14,7 +14,7 @@ class Download(Base):
         method="batch",
         modified_since=None,
         create_dir=True,
-        list_files=None
+        list_files=None,
     ):
         super(Download, self).__init__(
             destination=destination,
@@ -22,7 +22,7 @@ class Download(Base):
             extension=extension,
             modified_since=modified_since,
             method=method,
-            list_files=list_files
+            list_files=list_files,
         )
         self.checks()
         self.source = source

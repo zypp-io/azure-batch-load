@@ -13,7 +13,7 @@ class Upload(Base):
         method="batch",
         modified_since=None,
         overwrite=False,
-        list_files=None
+        list_files=None,
     ):
         super(Upload, self).__init__(
             destination=destination,
@@ -21,7 +21,7 @@ class Upload(Base):
             extension=extension,
             modified_since=modified_since,
             method=method,
-            list_files=list_files
+            list_files=list_files,
         )
         self.overwrite = overwrite
 
