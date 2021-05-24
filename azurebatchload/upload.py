@@ -13,6 +13,7 @@ class Upload(Base):
         method="batch",
         modified_since=None,
         overwrite=False,
+        list_files=None
     ):
         super(Upload, self).__init__(
             destination=destination,
@@ -20,6 +21,7 @@ class Upload(Base):
             extension=extension,
             modified_since=modified_since,
             method=method,
+            list_files=list_files
         )
         self.overwrite = overwrite
 
@@ -44,6 +46,14 @@ class Upload(Base):
 
             for root, dirs, files in os.walk(self.folder):
                 for file in files:
+                    # ignore hidden files
+                    if file.startswith("."):
+                        continue
+
+                    # if list_files is given, only upload matched files
+                    if self.list_files and file not in self.list_files:
+                        continue
+
                     full_path = os.path.join(root, file)
                     container_client = blob_service_client.get_container_client(
                         container=os.path.join(self.destination, full_path.replace(file, "")[:-1])
