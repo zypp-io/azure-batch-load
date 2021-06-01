@@ -56,7 +56,9 @@ class Upload(Base):
 
                     full_path = os.path.join(root, file)
                     container_client = blob_service_client.get_container_client(
-                        container=os.path.join(self.destination, root.split(self.destination)[1].lstrip("/"))
+                        container=os.path.join(
+                            self.destination, root.split(self.destination)[1].lstrip("/")
+                        )
                     )
                     # if extensions is given, only upload matching files.
                     if (
