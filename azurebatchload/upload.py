@@ -74,9 +74,7 @@ class Upload(Base):
                         container = self.destination
                     else:
                         container = os.path.join(self.destination, blob_folder)
-                    container_client = blob_service_client.get_container_client(
-                        container=container
-                    )
+                    container_client = blob_service_client.get_container_client(container=container)
                     # if extensions is given, only upload matching files.
 
                     with open(full_path, "rb") as data:
