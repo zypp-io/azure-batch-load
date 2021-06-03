@@ -16,7 +16,7 @@ class Upload(Base):
         modified_since=None,
         overwrite=False,
         list_files=None,
-        create_download_links=False
+        create_download_links=False,
     ):
         super(Upload, self).__init__(
             destination=destination,
@@ -37,7 +37,7 @@ class Upload(Base):
             container_name=self.destination,
             blob_name=blob_name,
             permission=BlobSasPermissions(read=True, delete_previous_version=True),
-            expiry=datetime.utcnow() + timedelta(days=7)
+            expiry=datetime.utcnow() + timedelta(days=7),
         )
 
         url_with_sas = f"{url}?{sas_token}"
