@@ -70,14 +70,10 @@ class Upload(Base):
                     else:
                         blob_folder = root
                     container_client = blob_service_client.get_container_client(
-                        container=os.path.join(
-                            self.destination, blob_folder
-                        )
+                        container=os.path.join(self.destination, blob_folder)
                     )
                     # if extensions is given, only upload matching files.
 
                     with open(full_path, "rb") as data:
                         logging.info(f"Uploading blob {full_path}")
-                        container_client.upload_blob(
-                            data=data, name=file, overwrite=self.overwrite
-                        )
+                        container_client.upload_blob(data=data, name=file, overwrite=self.overwrite)
