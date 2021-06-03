@@ -68,10 +68,13 @@ class Upload(Base):
                     if self.destination in root:
                         blob_folder = root.split(self.destination)[1].lstrip("/")
                     else:
-                        blob_folder = root
-                    container_client = blob_service_client.get_container_client(
-                        container=os.path.join(self.destination, blob_folder)
-                    )
+                        blob_folder = root.replace(self.folder, "").lstrip("/")
+
+                    if len(blob_folder) == 0:
+                        container = self.destination
+                    else:
+                        container = os.path.join(self.destination, blob_folder)
+                    container_client = blob_service_client.get_container_client(container=container)
                     # if extensions is given, only upload matching files.
 
                     with open(full_path, "rb") as data:
