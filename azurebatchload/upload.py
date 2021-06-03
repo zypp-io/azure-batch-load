@@ -46,6 +46,9 @@ class Upload(Base):
 
             for root, dirs, files in os.walk(self.folder):
                 for file in files:
+
+                    full_path = os.path.join(root, file)
+
                     # ignore hidden files
                     if file.startswith("."):
                         continue
@@ -54,27 +57,23 @@ class Upload(Base):
                     if self.list_files and file not in self.list_files:
                         continue
 
-                    full_path = os.path.join(root, file)
+                    # if extension is given only upload if extension is matched
+                    if (
+                        self.extensions
+                        and os.path.isfile(full_path)
+                        and not file.lower().endswith(self.extensions.lower())
+                    ):
+                        continue
+
+                    if self.destination in root:
+                        blob_folder = root.split(self.destination)[1].lstrip("/")
+                    else:
+                        blob_folder = root
                     container_client = blob_service_client.get_container_client(
-                        container=os.path.join(
-                            self.destination, root.split(self.destination)[1].lstrip("/")
-                        )
+                        container=os.path.join(self.destination, blob_folder)
                     )
                     # if extensions is given, only upload matching files.
-                    if (
-                        self.extension
-                        and os.path.isfile(full_path)
-                        and file.lower().endswith(self.extension.lower())
-                    ):
-                        with open(full_path, "rb") as data:
-                            logging.info(f"Uploading blob {full_path}")
-                            container_client.upload_blob(
-                                data=data, name=file, overwrite=self.overwrite
-                            )
-                    else:
-                        if not file.startswith("."):
-                            with open(full_path, "rb") as data:
-                                logging.info(f"Uploading blob {full_path}")
-                                container_client.upload_blob(
-                                    data=data, name=file, overwrite=self.overwrite
-                                )
+
+                    with open(full_path, "rb") as data:
+                        logging.info(f"Uploading blob {full_path}")
+                        container_client.upload_blob(data=data, name=file, overwrite=self.overwrite)

@@ -56,7 +56,7 @@ class Download(Base):
             container_client = blob_service_client.get_container_client(container=self.source)
             blob_list = container_client.list_blobs(name_starts_with=self.folder)
             for blob in blob_list:
-                if self.extension and not blob.name.lower().endswith(self.extension.lower()):
+                if self.extensions and not blob.name.lower().endswith(self.extensions.lower()):
                     continue
 
                 file_path, file_name = blob.name.rsplit("/", 1)
