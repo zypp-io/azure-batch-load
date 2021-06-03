@@ -36,7 +36,7 @@ class Upload(Base):
             account_key=self.account_key,
             container_name=self.destination,
             blob_name=blob_name,
-            permission=BlobSasPermissions(read=True),
+            permission=BlobSasPermissions(read=True, delete_previous_version=True),
             expiry=datetime.utcnow() + timedelta(days=7)
         )
 
