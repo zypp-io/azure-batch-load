@@ -8,7 +8,7 @@ with open("requirements.txt") as fp:
 
 setup(
     name="azurebatchload",
-    version="0.4.1",
+    version="0.4.2",
     author="Erfan Nariman",
     author_email="erfan@zypp.io",
     description="Download files in batches from Azure Blob Storage Containers",
