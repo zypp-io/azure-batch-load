@@ -1,6 +1,7 @@
 import os
 import logging
 from subprocess import check_output, CalledProcessError, STDOUT
+import re
 
 
 class Checks:
@@ -38,15 +39,15 @@ class Checks:
         -------
         AZURE_STORAGE_CONNECTION_STRING
         """
-        if os.environ.get("AZURE_STORAGE_CONNECTION_STRING", None):
-            return os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
-        elif all(
-            [
-                os.environ.get("AZURE_STORAGE_KEY", None),
-                os.environ.get("AZURE_STORAGE_ACCOUNT", None),
-            ]
-        ):
-            return self._create_connection_string()
+        connection_string = os.environ.get("AZURE_STORAGE_CONNECTION_STRING", None)
+        account_name = os.environ.get("AZURE_STORAGE_ACCOUNT", None)
+        account_key = os.environ.get("AZURE_STORAGE_KEY", None)
+
+        if connection_string:
+            account_name, account_key = self._parse_connection_string(connection_string)
+            return os.environ.get("AZURE_STORAGE_CONNECTION_STRING"), account_name, account_key
+        elif all([account_name, account_key]):
+            return self._create_connection_string(), account_name, account_key
         else:
             # check for env variables else raise
             raise ValueError(
@@ -91,3 +92,10 @@ class Checks:
         except CalledProcessError:
             logging.warning("Azure CLI is not installed, automatically setting method to 'single'")
             return False
+
+    @staticmethod
+    def _parse_connection_string(connection_string):
+        account_name = re.search(r"AccountName=(.*?);", connection_string).group(1)
+        account_key = re.search(r"AccountKey=(.*?);", connection_string).group(1)
+
+        return account_name, account_key
