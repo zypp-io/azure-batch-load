@@ -26,7 +26,10 @@ class Base(Checks):
         else:
             self.method = method
         self.list_files = list_files
-        self.connection_string = self._check_connection_credentials()
+        credentials = self._check_connection_credentials()
+        self.connection_string = credentials[0]
+        self.account_name = credentials[1]
+        self.account_key = credentials[2]
 
     def checks(self):
         allowed_methods = ("batch", "single")

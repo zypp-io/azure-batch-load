@@ -1,6 +1,8 @@
 import logging
 import os
-from azure.storage.blob import BlobServiceClient
+from datetime import datetime, timedelta
+
+from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
 from azurebatchload.core import Base
 
 
@@ -14,6 +16,7 @@ class Upload(Base):
         modified_since=None,
         overwrite=False,
         list_files=None,
+        create_download_links=False
     ):
         super(Upload, self).__init__(
             destination=destination,
@@ -24,6 +27,22 @@ class Upload(Base):
             list_files=list_files,
         )
         self.overwrite = overwrite
+        self.create_download_links = create_download_links
+
+    def create_blob_link(self, blob_name):
+        url = f"https://{self.account_name}.blob.core.windows.net/{self.destination}/{blob_name}"
+        sas_token = generate_blob_sas(
+            account_name=self.account_name,
+            account_key=self.account_key,
+            container_name=self.destination,
+            blob_name=blob_name,
+            permission=BlobSasPermissions(read=True),
+            expiry=datetime.utcnow() + timedelta(days=7)
+        )
+
+        url_with_sas = f"{url}?{sas_token}"
+
+        return url_with_sas
 
     def upload(self):
         self.checks()
@@ -43,6 +62,7 @@ class Upload(Base):
         else:
             logging.info(f"Uploading to container {self.destination} with method = 'single'.")
             blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
+            download_links = {}
 
             for root, dirs, files in os.walk(self.folder):
                 for file in files:
@@ -80,3 +100,10 @@ class Upload(Base):
                     with open(full_path, "rb") as data:
                         logging.info(f"Uploading blob {full_path}")
                         container_client.upload_blob(data=data, name=file, overwrite=self.overwrite)
+
+                    if self.create_download_links:
+                        download_links[file] = self.create_blob_link(file)
+                    else:
+                        download_links = None
+
+            return download_links
