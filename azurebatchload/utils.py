@@ -16,7 +16,7 @@ class Utils(Checks):
         self.name_starts_with = name_starts_with
         self.dataframe = dataframe
         self.extended_info = extended_info
-        self.connection_string = self._check_connection_credentials()
+        self.connection_string = self._check_connection_credentials()[0]
 
     def list_blobs(self):
         blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
