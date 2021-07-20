@@ -34,17 +34,13 @@ class Base(Checks):
     def checks(self):
         allowed_methods = ("batch", "single")
         if self.method not in allowed_methods:
-            raise ValueError(
-                f"Method {self.method} is not a valid method. " f"Choose from {' or '.join(allowed_methods)}."
-            )
+            raise ValueError(f"Method {self.method} is not a valid method. Choose from {' or '.join(allowed_methods)}.")
 
         if self.list_files and self.method == "batch":
             raise ValueError("list_files is only allowed with method='single'.")
 
         if self.list_files and not isinstance(self.list_files, list):
-            raise ValueError(
-                f"Argument list_files was set, but is not of type list, " f"but type {type(self.list_files)}"
-            )
+            raise ValueError(f"Argument list_files was set, but is not of type list, but type {type(self.list_files)}")
 
     @staticmethod
     def create_not_case_sensitive_extension(extension):
