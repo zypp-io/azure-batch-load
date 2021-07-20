@@ -17,6 +17,7 @@ class Upload(Base):
         overwrite=False,
         list_files=None,
         create_download_links=False,
+        expiry_download_links=7
     ):
         super(Upload, self).__init__(
             destination=destination,
@@ -28,20 +29,24 @@ class Upload(Base):
         )
         self.overwrite = overwrite
         self.create_download_links = create_download_links
+        self.expiry_download_links = expiry_download_links
 
-    def create_blob_link(self, blob_name):
-        url = f"https://{self.account_name}.blob.core.windows.net/{self.destination}/{blob_name}"
+    def create_blob_link(self, blob_folder, blob_name):
+        if blob_folder:
+            full_path_blob = f"{blob_folder}/{blob_name}"
+        else:
+            full_path_blob = blob_name
+        url = f"https://{self.account_name}.blob.core.windows.net/{self.destination}/{full_path_blob}"
         sas_token = generate_blob_sas(
             account_name=self.account_name,
             account_key=self.account_key,
             container_name=self.destination,
-            blob_name=blob_name,
-            permission=BlobSasPermissions(read=True, delete_previous_version=True),
-            expiry=datetime.utcnow() + timedelta(days=7),
+            blob_name=full_path_blob,
+            permission=BlobSasPermissions(read=True, delete_previous_version=False),
+            expiry=datetime.utcnow() + timedelta(days=self.expiry_download_links),
         )
 
         url_with_sas = f"{url}?{sas_token}"
-
         return url_with_sas
 
     def upload(self):
@@ -102,7 +107,7 @@ class Upload(Base):
                         container_client.upload_blob(data=data, name=file, overwrite=self.overwrite)
 
                     if self.create_download_links:
-                        download_links[file] = self.create_blob_link(file)
+                        download_links[file] = self.create_blob_link(blob_folder=blob_folder, blob_name=file)
                     else:
                         download_links = None
 
