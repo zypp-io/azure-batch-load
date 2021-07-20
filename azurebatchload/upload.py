@@ -2,7 +2,8 @@ import logging
 import os
 from datetime import datetime, timedelta
 
-from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
+from azure.storage.blob import BlobSasPermissions, BlobServiceClient, generate_blob_sas
+
 from azurebatchload.core import Base
 
 
@@ -17,7 +18,7 @@ class Upload(Base):
         overwrite=False,
         list_files=None,
         create_download_links=False,
-        expiry_download_links=7
+        expiry_download_links=7,
     ):
         super(Upload, self).__init__(
             destination=destination,

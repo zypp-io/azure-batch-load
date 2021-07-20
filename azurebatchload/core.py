@@ -35,8 +35,7 @@ class Base(Checks):
         allowed_methods = ("batch", "single")
         if self.method not in allowed_methods:
             raise ValueError(
-                f"Method {self.method} is not a valid method. "
-                f"Choose from {' or '.join(allowed_methods)}."
+                f"Method {self.method} is not a valid method. " f"Choose from {' or '.join(allowed_methods)}."
             )
 
         if self.list_files and self.method == "batch":
@@ -44,8 +43,7 @@ class Base(Checks):
 
         if self.list_files and not isinstance(self.list_files, list):
             raise ValueError(
-                f"Argument list_files was set, but is not of type list, "
-                f"but type {type(self.list_files)}"
+                f"Argument list_files was set, but is not of type list, " f"but type {type(self.list_files)}"
             )
 
     @staticmethod
