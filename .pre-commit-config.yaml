@@ -19,4 +19,4 @@ repos:
     rev: 5.9.1
     hooks:
     -   id: isort
-        args: ["--profile", "black"]
+        args: ["--profile", "black", --line-length=120]
