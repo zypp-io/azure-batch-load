@@ -1,4 +1,5 @@
 from azurebatchload.checks import Checks
+from azurebatchload.utils import convert_windows_path_to_unix
 
 
 class Base(Checks):
@@ -13,7 +14,7 @@ class Base(Checks):
     ):
         super().__init__(directory=folder)
 
-        self.destination = destination
+        self.destination = convert_windows_path_to_unix(destination)
         self.folder = folder
         if extension:
             self.extension = self.create_not_case_sensitive_extension(extension)

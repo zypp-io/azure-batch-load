@@ -1,5 +1,6 @@
-from pandas import DataFrame
 from azure.storage.blob import BlobServiceClient
+from pandas import DataFrame
+
 from azurebatchload.checks import Checks
 
 
@@ -53,3 +54,19 @@ class Utils(Checks):
                 df["size"] = (df["size"] / 1_000_000).round(2)
                 df = df.rename(columns={"size": "size_mb"})
                 return df
+
+
+def convert_windows_path_to_unix(path: str) -> str:
+    """
+    If users provide an windows, we convert it to unix path
+
+    Parameters
+    ----------
+    path: str
+        Given destination path
+
+    Returns
+    -------
+    Path converted to unix style.
+    """
+    return path.replace(r"\\", "/").replace("\\", "/")
