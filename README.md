@@ -49,7 +49,6 @@ So if the connection_string or storage_key + storage_account are set as environm
    we can leave the argument `connection_string`, `account_key` and `account_name` empty:
 
 ```python
-import os
 from azurebatchload import Download
 
 Download(
@@ -71,7 +70,7 @@ Download(
    source='blobcontainername',
    extension='.pdf',
    method='single'
-)
+).download()
 ```
 
 ### 3. Download a specific folder from a container
@@ -87,7 +86,7 @@ Download(
    folder='uploads/invoices/',
    extension='.pdf',
    method='single'
-)
+).download()
 ```
 
 ### 4. Download a given list of files
@@ -104,7 +103,7 @@ Download(
    folder='uploads/invoices/',
    list_files=["invoice1.pdf", "invoice2.pdf"],
    method='single'
-)
+).download()
 ```
 
 ## Upload:
