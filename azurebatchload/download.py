@@ -1,6 +1,8 @@
-import os
 import logging
+import os
+
 from azure.storage.blob import BlobServiceClient
+
 from azurebatchload.core import Base
 
 
@@ -59,7 +61,7 @@ class Download(Base):
                 if self.extensions and not blob.name.lower().endswith(self.extensions.lower()):
                     continue
 
-                file_path, file_name = blob.name.rsplit("/", 1)
+                file_path, file_name = os.path.split(blob.name)
 
                 if self.list_files and file_name not in self.list_files:
                     continue
