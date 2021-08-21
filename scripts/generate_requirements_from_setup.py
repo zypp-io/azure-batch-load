@@ -12,15 +12,16 @@ def get_config():
     return config_requirements, repo_path
 
 
-def check():
+def generate_requirements():
     config_requirements, repo_path = get_config()
 
-    with open(os.path.join(repo_path, "requirements.txt")) as f:
-        requirements_txt = f.read().splitlines()
+    with open(os.path.join(repo_path, "requirements.txt"), "w") as f:
+        f.write("\n".join(config_requirements))
 
-    assert sorted(config_requirements) == sorted(requirements_txt), "Requirements are not equal"
-    print("Requirements and setup.cfg and both are equal")
+    print(
+        "Generated requirements.txt from setup.cfg, with the following requirements\n", "\n".join(config_requirements)
+    )
 
 
 if __name__ == "__main__":
-    check()
+    generate_requirements()
