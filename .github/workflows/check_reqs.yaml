@@ -1,4 +1,4 @@
-name: py
+name: Check requirements equal
 
 on:
   push:
