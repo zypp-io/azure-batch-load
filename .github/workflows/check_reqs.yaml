@@ -1,0 +1,22 @@
+name: py
+
+on:
+  push:
+    branches:
+      - '*'
+      - '!main'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout repo content
+        uses: actions/checkout@v2
+      - name: setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: execute py script # run the run.py to get the latest data
+        run: |
+          python ./scripts/check_setupcfg_and_requirementst_equal.py
