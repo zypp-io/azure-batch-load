@@ -109,8 +109,6 @@ class Upload(Base):
 
                 if self.create_download_links:
                     download_links[file] = self.create_blob_link(blob_folder=blob_folder, blob_name=file)
-                else:
-                    download_links = None
 
         return download_links
 
@@ -118,6 +116,6 @@ class Upload(Base):
         self.checks()
 
         if self.method == "batch":
-            self.upload_batch()
+            return self.upload_batch()
         else:
-            self.upload_single()
+            return self.upload_single()
