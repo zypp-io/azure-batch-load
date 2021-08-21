@@ -9,3 +9,4 @@ def check():
         requirements_txt = f.read().splitlines()
 
     assert sorted(requirements_setup) == sorted(requirements_txt)
+    print("Requirements and setup.cfg and both are equal")
