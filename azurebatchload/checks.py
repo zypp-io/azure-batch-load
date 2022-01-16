@@ -1,7 +1,7 @@
-import os
 import logging
-from subprocess import check_output, CalledProcessError, STDOUT
+import os
 import re
+from subprocess import STDOUT, CalledProcessError, check_output
 
 
 class Checks:
