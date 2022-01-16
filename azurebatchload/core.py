@@ -1,3 +1,7 @@
+from datetime import datetime, timedelta
+
+from azure.storage.blob import BlobSasPermissions, generate_blob_sas
+
 from azurebatchload.checks import Checks
 
 
@@ -10,6 +14,7 @@ class Base(Checks):
         modified_since=None,
         method="batch",
         list_files=None,
+        expiry_download_links=7,
     ):
         super().__init__(directory=folder)
 
@@ -27,6 +32,7 @@ class Base(Checks):
         self.connection_string = credentials[0]
         self.account_name = credentials[1]
         self.account_key = credentials[2]
+        self.expiry_download_links = expiry_download_links
 
     def checks(self):
         allowed_methods = ("batch", "single")
@@ -38,3 +44,21 @@ class Base(Checks):
 
         if self.list_files and not isinstance(self.list_files, list):
             raise ValueError(f"Argument list_files was set, but is not of type list, but type {type(self.list_files)}")
+
+    def create_blob_link(self, blob_folder, blob_name) -> str:
+        if blob_folder:
+            full_path_blob = f"{blob_folder}/{blob_name}"
+        else:
+            full_path_blob = blob_name
+        url = f"https://{self.account_name}.blob.core.windows.net/{self.destination}/{full_path_blob}"
+        sas_token = generate_blob_sas(
+            account_name=self.account_name,
+            account_key=self.account_key,
+            container_name=self.destination,
+            blob_name=full_path_blob,
+            permission=BlobSasPermissions(read=True, delete_previous_version=False),
+            expiry=datetime.utcnow() + timedelta(days=self.expiry_download_links),
+        )
+
+        url_with_sas = f"{url}?{sas_token}"
+        return url_with_sas
