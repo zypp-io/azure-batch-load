@@ -104,7 +104,7 @@ class Upload(Base):
                 container_client = blob_service_client.get_container_client(container=container)
 
                 with open(full_path, "rb") as data:
-                    logging.info(f"Uploading blob {full_path}")
+                    logging.debug(f"Uploading blob {full_path}")
                     container_client.upload_blob(data=data, name=file, overwrite=self.overwrite)
 
                 if self.create_download_links:

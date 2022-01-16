@@ -69,6 +69,6 @@ class Download(Base):
                 directory = os.path.join(self.destination, file_path)
                 directory = os.path.abspath(directory)
                 self._create_dir(directory)
-                logging.info(f"Downloading file {blob.name}")
+                logging.debug(f"Downloading file {blob.name}")
                 with open(os.path.join(self.destination, blob.name), "wb") as download_file:
                     download_file.write(blob_client.download_blob().readall())
