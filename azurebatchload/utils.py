@@ -1,22 +1,33 @@
-from pandas import DataFrame
+from ntpath import basename
+
 from azure.storage.blob import BlobServiceClient
-from azurebatchload.checks import Checks
+from pandas import DataFrame
+
+from azurebatchload.core import Base
 
 
-class Utils(Checks):
+class Utils(Base):
     def __init__(
         self,
         container,
         name_starts_with=None,
         dataframe=False,
         extended_info=False,
+        create_download_links=False,
+        expiry_download_links=7,
     ):
-        super(Utils, self).__init__(directory=None)
+        super(Utils, self).__init__(
+            destination=container,
+            folder=name_starts_with,
+            expiry_download_links=expiry_download_links,
+        )
+
         self.container = container
         self.name_starts_with = name_starts_with
         self.dataframe = dataframe
         self.extended_info = extended_info
         self.connection_string = self._check_connection_credentials()[0]
+        self.create_download_links = create_download_links
 
     def list_blobs(self):
         blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
@@ -24,6 +35,11 @@ class Utils(Checks):
         files = container_client.list_blobs(name_starts_with=self.name_starts_with)
 
         included_info = ("name", "container", "last_modified", "creation_time", "size")
+
+        # create download links for the selected container.
+        if self.create_download_links:
+            return self.create_blob_links(files=files)
+
         # we have 4 options to return:
         # extended_info = False
         if not self.extended_info:
@@ -53,3 +69,12 @@ class Utils(Checks):
                 df["size"] = (df["size"] / 1_000_000).round(2)
                 df = df.rename(columns={"size": "size_mb"})
                 return df
+
+    def create_blob_links(self, files):
+        files = [file.get("name") for file in files]
+        url_list = []
+        for file in files:
+            url = self.create_blob_link(blob_folder=file.replace("/" + basename(file), ""), blob_name=basename(file))
+            url_list.append({"filename": file, "url": url})
+
+        return DataFrame(url_list)
