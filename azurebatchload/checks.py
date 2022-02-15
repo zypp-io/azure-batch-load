@@ -1,7 +1,7 @@
-import os
 import logging
-from subprocess import check_output, CalledProcessError, STDOUT
+import os
 import re
+from subprocess import STDOUT, CalledProcessError, check_output
 
 
 class Checks:
@@ -90,7 +90,7 @@ class Checks:
             check_output(["az", "--version"], stderr=STDOUT, shell=True)
             return True
         except CalledProcessError:
-            logging.warning("Azure CLI is not installed, automatically setting method to 'single'")
+            logging.debug("Azure CLI is not installed, automatically setting method to 'single'")
             return False
 
     @staticmethod
