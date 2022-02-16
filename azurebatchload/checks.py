@@ -8,7 +8,8 @@ class Checks:
     def __init__(self, directory):
         self.directory = directory
 
-    def _create_connection_string(self):
+    @staticmethod
+    def _create_connection_string():
         """
         When AZURE_STORAGE_ACCOUNT and AZURE_STORAGE_KEY are given,
         create an AZURE_STORAGE_CONNECTION_STRING
