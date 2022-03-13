@@ -21,7 +21,6 @@ class Base(Checks):
         self.destination = destination
         self.folder = folder
         self.extension = extension
-        self.extensions = extension
         self.modified_since = modified_since
         if not self._check_azure_cli_installed():
             self.method = "single"
@@ -83,6 +82,7 @@ class Base(Checks):
         return new_extension
 
     def define_pattern(self):
+        self.extension = self.create_not_case_sensitive_extension(self.extension)
         if self.folder and not self.extension:
             if self.folder.endswith("/"):
                 pattern = self.folder + "*"
