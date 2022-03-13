@@ -34,7 +34,6 @@ class Upload(Base):
         self.create_download_links = create_download_links
 
     def upload_batch(self):
-        logging.info(f"Uploading to container {self.destination} method = 'batch'.")
         cmd = f"az storage fs directory upload " f"-f {self.destination} " f"-s {self.folder} -r"
 
         non_default = {"-d": self.blob_folder, "--connection-string": self.connection_string}
@@ -46,7 +45,6 @@ class Upload(Base):
         os.system(cmd)
 
     def upload_single(self):
-        logging.info(f"Uploading to container {self.destination} with method = 'single'.")
         blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
         download_links = {}
 
@@ -64,7 +62,7 @@ class Upload(Base):
                     continue
 
                 # if extension is given only upload if extension is matched
-                if self.extensions and os.path.isfile(full_path) and not file.lower().endswith(self.extensions.lower()):
+                if self.extension and os.path.isfile(full_path) and not file.lower().endswith(self.extension.lower()):
                     continue
 
                 blob_folder = root.replace(self.folder, "").lstrip("/")
@@ -96,6 +94,7 @@ class Upload(Base):
     def upload(self):
         self.checks()
 
+        logging.info(f"Uploading to container {self.destination} with method = '{self.method}'.")
         if self.method == "batch":
             return self.upload_batch()
         else:

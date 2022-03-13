@@ -53,8 +53,10 @@ class Download(Base):
         blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
         container_client = blob_service_client.get_container_client(container=self.source)
         blob_list = container_client.list_blobs(name_starts_with=self.folder)
+
+        n_files = 0
         for blob in blob_list:
-            if self.extensions and not blob.name.lower().endswith(self.extensions.lower()):
+            if self.extension and not blob.name.lower().endswith(self.extension.lower()):
                 continue
 
             file_path, file_name = os.path.split(blob.name)
@@ -68,6 +70,10 @@ class Download(Base):
             logging.debug(f"Downloading file {blob.name}")
             with open(os.path.join(self.destination, blob.name), "wb") as download_file:
                 download_file.write(blob_client.download_blob().readall())
+
+            n_files += 1
+
+        logging.info(f"Downloaded total of {n_files} files")
 
     def download(self):
 
