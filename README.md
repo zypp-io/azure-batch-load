@@ -8,7 +8,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 # Azure Batch Load
-High level Python wrapper around the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/) to download or upload files in batches from or to Azure Blob Storage Containers.
+High level Python wrapper for the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/) to download or upload files in batches from or to Azure Blob Storage Containers.
 This project aims to be the [missing functionality](https://github.com/Azure/azure-storage-python/issues/554)
 in the Python SDK of Azure Storage since there is no possibility to download or upload batches of files from or to containers.
 The only option in the Azure Storage Python SDK is downloading file by file, which takes a lot of time.
