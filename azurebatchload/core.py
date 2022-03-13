@@ -62,3 +62,37 @@ class Base(Checks):
 
         url_with_sas = f"{url}?{sas_token}"
         return url_with_sas
+
+    @staticmethod
+    def create_not_case_sensitive_extension(extension):
+        """
+        We create in-case sensitive fnmatch
+        .pdf -> .[Pp][Dd][Ff]
+        .csv -> .[Cc][Ss][Vv]
+        """
+        new_extension = ""
+        for letter in extension:
+            if not letter.isalpha():
+                new_extension += letter
+            else:
+                new_extension += f"[{letter.upper()}{letter}]"
+
+        if not new_extension.startswith("*"):
+            new_extension = "*" + new_extension
+
+        return new_extension
+
+    def define_pattern(self):
+        if self.folder and not self.extension:
+            if self.folder.endswith("/"):
+                pattern = self.folder + "*"
+            else:
+                pattern = self.folder + "/*"
+        elif self.folder and self.extension:
+            pattern = self.folder.rstrip("/") + "/" + "*" + self.extension
+        elif not self.folder and self.extension:
+            pattern = "*" + self.extension
+        else:
+            pattern = None
+
+        return pattern
