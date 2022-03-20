@@ -3,7 +3,7 @@
 </p>
 
 [![Downloads](https://pepy.tech/badge/azurebatchload)](https://pepy.tech/project/azurebatchload)
-![PyPI](https://img.shields.io/pypi/v/azurebatchload)
+[![PyPi](https://img.shields.io/pypi/v/azurebatchload.svg)](https://pypi.python.org/pypi/azurebatchload)
 [![Open Source](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://opensource.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
