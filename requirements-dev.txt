@@ -1,2 +1,2 @@
 pre-commit
-dotenv
+python-dotenv
