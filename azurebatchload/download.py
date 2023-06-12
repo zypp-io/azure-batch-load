@@ -76,7 +76,6 @@ class Download(Base):
         logging.info(f"Downloaded total of {n_files} files")
 
     def download(self):
-
         # for batch load we use the Azure CLI
         if self.method == "batch":
             self._download_batch()
