@@ -44,7 +44,6 @@ class Utils(Base):
         return [file.get("name") for file in files]
 
     def _list_blobs_not_extended(self, files):
-
         file_names = self._get_file_names_simple(files)
         # 1. dataframe = False, return just a list of file names
         if not self.dataframe:

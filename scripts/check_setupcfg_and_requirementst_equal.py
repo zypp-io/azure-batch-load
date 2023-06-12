@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from setuptools.config import read_configuration
+from setuptools.config.setupcfg import read_configuration
 
 
 def get_config():
