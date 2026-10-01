@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
-from azure.storage.blob import BlobSasPermissions, generate_blob_sas
+from azure.identity import DefaultAzureCredential
+from azure.storage.blob import BlobSasPermissions, BlobServiceClient, generate_blob_sas
 
 from azurebatchload.checks import Checks
 
@@ -43,6 +44,23 @@ class Base(Checks):
 
         if self.list_files and not isinstance(self.list_files, list):
             raise ValueError(f"Argument list_files was set, but is not of type list, but type {type(self.list_files)}")
+
+    def _get_blob_service_client(self) -> BlobServiceClient:
+        if self.connection_string:
+            return BlobServiceClient.from_connection_string(self.connection_string)
+
+        # passwordless: az login locally, managed identity on Azure
+        return BlobServiceClient(
+            account_url=f"https://{self.account_name}.blob.core.windows.net",
+            credential=DefaultAzureCredential(),
+        )
+
+    def _cli_auth_flags(self) -> dict:
+        if self.connection_string:
+            return {"--connection-string": self.connection_string}
+
+        # passwordless: az uses its own session (az login / az login --identity)
+        return {"--account-name": self.account_name, "--auth-mode": "login"}
 
     def create_blob_link(self, blob_folder, blob_name) -> str:
         if blob_folder:

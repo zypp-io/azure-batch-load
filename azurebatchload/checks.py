@@ -33,12 +33,14 @@ class Checks:
         """
         If connection string is given as env variable return it,
         else the connection string is generated from storage key and name.
+        If only the storage account name is given, no connection string is returned
+        and DefaultAzureCredential is used (passwordless).
 
         If none of the above are given, raise.
 
         Returns
         -------
-        AZURE_STORAGE_CONNECTION_STRING
+        AZURE_STORAGE_CONNECTION_STRING (or None when passwordless), account name, account key
         """
         connection_string = os.environ.get("AZURE_STORAGE_CONNECTION_STRING", None)
         account_name = os.environ.get("AZURE_STORAGE_ACCOUNT", None)
@@ -49,11 +51,13 @@ class Checks:
             return os.environ.get("AZURE_STORAGE_CONNECTION_STRING"), account_name, account_key
         elif all([account_name, account_key]):
             return self._create_connection_string(), account_name, account_key
+        elif account_name:
+            return None, account_name, None
         else:
             # check for env variables else raise
             raise ValueError(
-                "If AZURE_STORAGE_CONNECTION_STRING is not set as env variable "
-                " AZURE_STORAGE_KEY and AZURE_STORAGE_ACCOUNT have to be set."
+                "AZURE_STORAGE_ACCOUNT has to be set as env variable. "
+                "Legacy: AZURE_STORAGE_CONNECTION_STRING or AZURE_STORAGE_KEY with AZURE_STORAGE_ACCOUNT."
             )
 
     def _check_dir(self):

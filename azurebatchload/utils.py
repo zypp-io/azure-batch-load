@@ -1,6 +1,5 @@
 from ntpath import basename
 
-from azure.storage.blob import BlobServiceClient
 from pandas import DataFrame
 
 from azurebatchload.core import Base
@@ -28,7 +27,7 @@ class Utils(Base):
         self.extended_info = extended_info
         self.connection_string = self._check_connection_credentials()[0]
         self.create_download_links = create_download_links
-        self._blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
+        self._blob_service_client = self._get_blob_service_client()
         self._container_client = self._blob_service_client.get_container_client(self.container)
 
     ###################

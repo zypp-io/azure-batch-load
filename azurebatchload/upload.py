@@ -1,8 +1,6 @@
 import logging
 import os
 
-from azure.storage.blob import BlobServiceClient
-
 from azurebatchload.core import Base
 
 
@@ -36,7 +34,7 @@ class Upload(Base):
     def upload_batch(self):
         cmd = f"az storage fs directory upload " f"-f {self.destination} " f"-s {self.folder} -r"
 
-        non_default = {"-d": self.blob_folder, "--connection-string": self.connection_string}
+        non_default = {"-d": self.blob_folder, **self._cli_auth_flags()}
 
         for flag, value in non_default.items():
             if value:
@@ -45,7 +43,7 @@ class Upload(Base):
         os.system(cmd)
 
     def upload_single(self):
-        blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
+        blob_service_client = self._get_blob_service_client()
         download_links = {}
 
         for root, dirs, files in os.walk(self.folder):
