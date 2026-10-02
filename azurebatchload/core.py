@@ -38,13 +38,8 @@ class Base(Checks):
         self.account_name = credentials[1]
         self.account_key = credentials[2]
         self.expiry_download_links = expiry_download_links
+        self._blob_service_client = None
         self._user_delegation_key = None
-
-        if not self.account_key and expiry_download_links > MAX_USER_DELEGATION_DAYS:
-            raise ValueError(
-                f"expiry_download_links can be at most {MAX_USER_DELEGATION_DAYS} days "
-                f"without an account key, got {expiry_download_links}."
-            )
 
     def checks(self):
         allowed_methods = ("batch", "single")
@@ -58,14 +53,18 @@ class Base(Checks):
             raise ValueError(f"Argument list_files was set, but is not of type list, but type {type(self.list_files)}")
 
     def _get_blob_service_client(self) -> BlobServiceClient:
-        if self.connection_string:
-            return BlobServiceClient.from_connection_string(self.connection_string)
+        # one client (and credential) per run, so the token is fetched once
+        if self._blob_service_client is None:
+            if self.connection_string:
+                self._blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
+            else:
+                # passwordless: az login locally, managed identity on Azure
+                self._blob_service_client = BlobServiceClient(
+                    account_url=f"https://{self.account_name}.blob.core.windows.net",
+                    credential=DefaultAzureCredential(),
+                )
 
-        # passwordless: az login locally, managed identity on Azure
-        return BlobServiceClient(
-            account_url=f"https://{self.account_name}.blob.core.windows.net",
-            credential=DefaultAzureCredential(),
-        )
+        return self._blob_service_client
 
     def _cli_auth_flags(self) -> dict:
         if self.connection_string:
@@ -73,6 +72,18 @@ class Base(Checks):
 
         # passwordless: az uses its own session (az login / az login --identity)
         return {"--account-name": self.account_name, "--auth-mode": "login"}
+
+    def _check_link_expiry(self):
+        if self.expiry_download_links <= 0:
+            raise ValueError(
+                f"expiry_download_links has to be a positive number of days, got {self.expiry_download_links}."
+            )
+
+        if not self.account_key and self.expiry_download_links > MAX_USER_DELEGATION_DAYS:
+            raise ValueError(
+                f"expiry_download_links can be at most {MAX_USER_DELEGATION_DAYS} days "
+                f"without an account key, got {self.expiry_download_links}."
+            )
 
     def _get_user_delegation_key(self):
         """
@@ -95,6 +106,8 @@ class Base(Checks):
         return self._user_delegation_key
 
     def create_blob_link(self, blob_folder, blob_name) -> str:
+        self._check_link_expiry()
+
         if blob_folder:
             full_path_blob = f"{blob_folder}/{blob_name}"
         else:

@@ -17,6 +17,9 @@ from azure.identity import DefaultAzureCredential
 
 from azurebatchload import Download, Upload, Utils
 
+if len(sys.argv) != 3:
+    sys.exit(__doc__)
+
 ACCOUNT, CONTAINER = sys.argv[1], sys.argv[2]
 PREFIX = f"smoke-{time.strftime('%Y%m%d-%H%M%S')}"
 FILES = {"a.pdf": b"smoke test a", "b.pdf": b"smoke test b", "note.txt": b"not a pdf"}

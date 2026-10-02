@@ -2,11 +2,12 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from azure.identity import DefaultAzureCredential
-from azure.storage.blob import BlobServiceClient, UserDelegationKey
+from azure.storage.blob import BlobServiceClient, ContainerClient, UserDelegationKey
 
 from azurebatchload.checks import Checks
 from azurebatchload.core import Base
 from azurebatchload.download import Download
+from azurebatchload.upload import Upload
 from azurebatchload.utils import Utils
 
 ACCOUNT_KEY = "a2V5"
@@ -23,11 +24,11 @@ def clear_storage_env(monkeypatch):
 
 @pytest.fixture
 def delegation_key_requests(monkeypatch):
-    """Stub the Get User Delegation Key call (network) and record each requested expiry."""
+    """Stub the Get User Delegation Key call (network) and record each requested (start, expiry)."""
     requests = []
 
     def get_user_delegation_key(self, key_start_time, key_expiry_time, **kwargs):
-        requests.append(key_expiry_time)
+        requests.append((key_start_time, key_expiry_time))
         key = UserDelegationKey()
         key.signed_oid = "oid"
         key.signed_tid = "tid"
@@ -75,6 +76,13 @@ def test_blob_service_client_uses_connection_string(monkeypatch):
 
     assert client.credential.account_name == "acct"
     assert client.credential.account_key == ACCOUNT_KEY
+
+
+def test_blob_service_client_reused_within_a_run(monkeypatch):
+    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "acct")
+    base = Base(destination="container", folder=None)
+
+    assert base._get_blob_service_client() is base._get_blob_service_client()
 
 
 def test_utils_works_without_connection_string(monkeypatch):
@@ -132,19 +140,72 @@ def test_user_delegation_key_requested_once_per_run(monkeypatch, delegation_key_
     assert len(delegation_key_requests) == 1
 
 
-def test_user_delegation_key_stays_under_seven_days(monkeypatch, delegation_key_requests):
+def test_user_delegation_key_valid_at_most_seven_days(monkeypatch, delegation_key_requests):
     monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "acct")
 
     Base(destination="container", folder=None, expiry_download_links=7).create_blob_link(None, "a.pdf")
 
-    assert delegation_key_requests[0] < datetime.now(timezone.utc) + timedelta(days=7)
+    start, expiry = delegation_key_requests[0]
+    assert expiry - start <= timedelta(days=7)
 
 
-def test_expiry_over_seven_days_rejected_when_passwordless(monkeypatch):
+def test_user_delegation_key_expiry_leaves_clock_skew_margin(monkeypatch, delegation_key_requests):
     monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "acct")
 
+    Base(destination="container", folder=None, expiry_download_links=7).create_blob_link(None, "a.pdf")
+
+    _, expiry = delegation_key_requests[0]
+    assert expiry <= datetime.now(timezone.utc) + timedelta(days=7) - timedelta(minutes=5)
+
+
+def test_long_expiry_allowed_when_no_links_are_created(monkeypatch):
+    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "acct")
+
+    Base(destination="container", folder=None, expiry_download_links=30)
+
+
+def test_link_with_expiry_over_seven_days_rejected_when_passwordless(monkeypatch, delegation_key_requests):
+    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "acct")
+    base = Base(destination="container", folder=None, expiry_download_links=8)
+
     with pytest.raises(ValueError, match="7 days"):
-        Base(destination="container", folder=None, expiry_download_links=8)
+        base.create_blob_link(None, "a.pdf")
+    assert delegation_key_requests == []
+
+
+def test_upload_with_links_rejects_long_expiry_before_uploading(monkeypatch, tmp_path):
+    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "acct")
+    (tmp_path / "a.pdf").write_bytes(b"a")
+    uploads = []
+    monkeypatch.setattr(ContainerClient, "upload_blob", lambda self, *args, **kwargs: uploads.append(kwargs))
+    upload = Upload(
+        destination="container",
+        source=str(tmp_path),
+        method="single",
+        create_download_links=True,
+        expiry_download_links=8,
+    )
+
+    with pytest.raises(ValueError, match="7 days"):
+        upload.upload()
+    assert uploads == []
+
+
+def test_negative_expiry_rejected_when_passwordless(monkeypatch, delegation_key_requests):
+    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "acct")
+    base = Base(destination="container", folder=None, expiry_download_links=-1)
+
+    with pytest.raises(ValueError, match="positive"):
+        base.create_blob_link(None, "a.pdf")
+    assert delegation_key_requests == []
+
+
+def test_zero_expiry_rejected_with_account_key(monkeypatch):
+    monkeypatch.setenv("AZURE_STORAGE_CONNECTION_STRING", CONNECTION_STRING)
+    base = Base(destination="container", folder=None, expiry_download_links=0)
+
+    with pytest.raises(ValueError, match="positive"):
+        base.create_blob_link(None, "a.pdf")
 
 
 def test_blob_link_signed_with_account_key_when_available(monkeypatch):

@@ -90,6 +90,9 @@ class Upload(Base):
 
     def upload(self):
         self.checks()
+        if self.create_download_links:
+            # fail before uploading anything, not after the first file
+            self._check_link_expiry()
 
         logging.info(f"Uploading to container {self.destination} with method = '{self.method}'.")
         if self.method == "batch":

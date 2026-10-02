@@ -8,6 +8,7 @@ Changelog
 `DefaultAzureCredential` (`az login` locally, managed identity on Azure).
 - `method="batch"` runs the Azure CLI with `--account-name` and `--auth-mode login` in passwordless mode.
 - Download links are user delegation SAS URLs in passwordless mode, valid for at most 7 days.
+- `expiry_download_links` has to be a positive number of days; it is checked when download links are created.
 - Connection string and account key keep working and take precedence when set.
 - New dependency: `azure-identity`.
 
