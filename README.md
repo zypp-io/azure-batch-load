@@ -33,20 +33,52 @@ Check if Azure CLI is installed through terminal:
 az --version
 ```
 
-# Requirements
+Batch uploads go through [AzCopy](https://learn.microsoft.com/azure/storage/common/storage-use-azcopy-v10) (via `az storage fs directory upload`).
+Install it yourself if the Azure CLI fails to download it (macOS: `brew install azcopy`).
 
-Azure Storage connection string has to be set as environment variable `AZURE_STORAGE_CONNECTION_STRING` or
-the seperate environment variables `AZURE_STORAGE_KEY` and `AZURE_STORAGE_NAME` which will be used to create the connection string.
+# Authentication
+
+## Passwordless (recommended)
+
+Set only the storage account name:
+
+```commandline
+export AZURE_STORAGE_ACCOUNT=<storage-account-name>
+```
+
+Azure-batch-load then authenticates with your Microsoft Entra identity instead of a storage key:
+
+- `method="single"` uses [`DefaultAzureCredential`](https://learn.microsoft.com/python/api/azure-identity/azure.identity.defaultazurecredential):
+  `az login` locally, the managed identity on Azure, `azure/login` in GitHub Actions.
+- `method="batch"` runs the Azure CLI with `--auth-mode login`, so the CLI needs its own login:
+  `az login` locally, or `az login --identity` on Azure (add `--client-id <client-id>` for a user-assigned identity).
+
+The identity needs a data role on the storage account or container:
+
+| Role                            | Needed for                           |
+|---------------------------------|--------------------------------------|
+| `Storage Blob Data Reader`      | Download, list blobs, download links |
+| `Storage Blob Data Contributor` | Upload                               |
+
+Download links need the role on the storage account (or higher). With a container-scoped role, also assign
+`Storage Blob Delegator` on the storage account.
+
+Subscription Owner or Contributor does not include data access. New role assignments can take a few minutes to apply.
+
+Download links (`create_download_links=True`) are user delegation SAS URLs, valid for at most 7 days (`expiry_download_links`).
+
+## Connection string or account key (legacy)
+
+Set `AZURE_STORAGE_CONNECTION_STRING`, or `AZURE_STORAGE_ACCOUNT` together with `AZURE_STORAGE_KEY`.
+A connection string or key takes precedence over passwordless authentication when both are set.
 
 # Usage
 
 ## Download
 ### 1. Using the standard environment variables
 
-Azure-batch-load automatically checks for environment variables: `AZURE_STORAGE_CONNECTION_STRING`,
-   `AZURE_STORAGE_KEY`and `AZURE_STORAGE_ACCOUNT`.
-So if the connection_string or storage_key + storage_account are set as environment variables,
-   we can leave the argument `connection_string`, `account_key` and `account_name` empty:
+Azure-batch-load reads its credentials from environment variables (see [Authentication](#authentication)),
+so no credential arguments are needed:
 
 ```python
 from azurebatchload import Download

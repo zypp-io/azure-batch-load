@@ -1,5 +1,8 @@
+from datetime import datetime, timedelta, timezone
+
 import pytest
 from azure.identity import DefaultAzureCredential
+from azure.storage.blob import BlobServiceClient, UserDelegationKey
 
 from azurebatchload.checks import Checks
 from azurebatchload.core import Base
@@ -16,6 +19,27 @@ CONNECTION_STRING = (
 def clear_storage_env(monkeypatch):
     for var in ("AZURE_STORAGE_CONNECTION_STRING", "AZURE_STORAGE_ACCOUNT", "AZURE_STORAGE_KEY"):
         monkeypatch.delenv(var, raising=False)
+
+
+@pytest.fixture
+def delegation_key_requests(monkeypatch):
+    """Stub the Get User Delegation Key call (network) and record each requested expiry."""
+    requests = []
+
+    def get_user_delegation_key(self, key_start_time, key_expiry_time, **kwargs):
+        requests.append(key_expiry_time)
+        key = UserDelegationKey()
+        key.signed_oid = "oid"
+        key.signed_tid = "tid"
+        key.signed_start = key_start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+        key.signed_expiry = key_expiry_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+        key.signed_service = "b"
+        key.signed_version = "2021-08-06"
+        key.value = ACCOUNT_KEY
+        return key
+
+    monkeypatch.setattr(BlobServiceClient, "get_user_delegation_key", get_user_delegation_key)
+    return requests
 
 
 def test_account_name_only_is_passwordless(monkeypatch):
@@ -86,3 +110,47 @@ def test_download_batch_command_is_passwordless(monkeypatch, tmp_path):
 
     assert "--account-name 'acct' --auth-mode 'login'" in commands[0]
     assert "--connection-string" not in commands[0]
+
+
+def test_blob_link_is_user_delegation_sas_when_passwordless(monkeypatch, delegation_key_requests):
+    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "acct")
+
+    link = Base(destination="container", folder=None).create_blob_link("folder", "a.pdf")
+
+    assert link.startswith("https://acct.blob.core.windows.net/container/folder/a.pdf?")
+    assert "skoid=oid" in link
+    assert "sp=r" in link
+
+
+def test_user_delegation_key_requested_once_per_run(monkeypatch, delegation_key_requests):
+    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "acct")
+    base = Base(destination="container", folder=None)
+
+    base.create_blob_link("folder", "a.pdf")
+    base.create_blob_link("folder", "b.pdf")
+
+    assert len(delegation_key_requests) == 1
+
+
+def test_user_delegation_key_stays_under_seven_days(monkeypatch, delegation_key_requests):
+    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "acct")
+
+    Base(destination="container", folder=None, expiry_download_links=7).create_blob_link(None, "a.pdf")
+
+    assert delegation_key_requests[0] < datetime.now(timezone.utc) + timedelta(days=7)
+
+
+def test_expiry_over_seven_days_rejected_when_passwordless(monkeypatch):
+    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "acct")
+
+    with pytest.raises(ValueError, match="7 days"):
+        Base(destination="container", folder=None, expiry_download_links=8)
+
+
+def test_blob_link_signed_with_account_key_when_available(monkeypatch):
+    monkeypatch.setenv("AZURE_STORAGE_CONNECTION_STRING", CONNECTION_STRING)
+
+    link = Base(destination="container", folder=None, expiry_download_links=30).create_blob_link(None, "a.pdf")
+
+    assert "sig=" in link
+    assert "skoid=" not in link

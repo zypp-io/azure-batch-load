@@ -1,9 +1,14 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobSasPermissions, BlobServiceClient, generate_blob_sas
 
 from azurebatchload.checks import Checks
+
+# Azure caps user delegation keys at 7 days from the current (server) time.
+# Stay a few minutes inside that window to tolerate clock skew.
+MAX_USER_DELEGATION_DAYS = 7
+CLOCK_SKEW_MARGIN = timedelta(minutes=5)
 
 
 class Base(Checks):
@@ -33,6 +38,13 @@ class Base(Checks):
         self.account_name = credentials[1]
         self.account_key = credentials[2]
         self.expiry_download_links = expiry_download_links
+        self._user_delegation_key = None
+
+        if not self.account_key and expiry_download_links > MAX_USER_DELEGATION_DAYS:
+            raise ValueError(
+                f"expiry_download_links can be at most {MAX_USER_DELEGATION_DAYS} days "
+                f"without an account key, got {expiry_download_links}."
+            )
 
     def checks(self):
         allowed_methods = ("batch", "single")
@@ -62,19 +74,48 @@ class Base(Checks):
         # passwordless: az uses its own session (az login / az login --identity)
         return {"--account-name": self.account_name, "--auth-mode": "login"}
 
+    def _get_user_delegation_key(self):
+        """
+        Fetch one user delegation key per run and reuse it for every download link.
+
+        Returns
+        -------
+        user delegation key, expiry of the key (and of the links signed with it)
+        """
+        if self._user_delegation_key is None:
+            now = datetime.now(timezone.utc)
+            start = now - CLOCK_SKEW_MARGIN
+            expiry = min(
+                now + timedelta(days=self.expiry_download_links),
+                start + timedelta(days=MAX_USER_DELEGATION_DAYS),
+            )
+            key = self._get_blob_service_client().get_user_delegation_key(key_start_time=start, key_expiry_time=expiry)
+            self._user_delegation_key = key, expiry
+
+        return self._user_delegation_key
+
     def create_blob_link(self, blob_folder, blob_name) -> str:
         if blob_folder:
             full_path_blob = f"{blob_folder}/{blob_name}"
         else:
             full_path_blob = blob_name
         url = f"https://{self.account_name}.blob.core.windows.net/{self.destination}/{full_path_blob}"
+
+        if self.account_key:
+            signing_key = {"account_key": self.account_key}
+            expiry = datetime.now(timezone.utc) + timedelta(days=self.expiry_download_links)
+        else:
+            # passwordless: sign with a user delegation key (Entra identity) instead of the account key
+            user_delegation_key, expiry = self._get_user_delegation_key()
+            signing_key = {"user_delegation_key": user_delegation_key}
+
         sas_token = generate_blob_sas(
             account_name=self.account_name,
-            account_key=self.account_key,
             container_name=self.destination,
             blob_name=full_path_blob,
             permission=BlobSasPermissions(read=True, delete_previous_version=False),
-            expiry=datetime.utcnow() + timedelta(days=self.expiry_download_links),
+            expiry=expiry,
+            **signing_key,
         )
 
         url_with_sas = f"{url}?{sas_token}"
