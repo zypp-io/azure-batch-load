@@ -1,8 +1,6 @@
 import logging
 import os
 
-from azure.storage.blob import BlobServiceClient
-
 from azurebatchload.core import Base
 
 
@@ -39,18 +37,14 @@ class Download(Base):
 
         cmd = f"az storage blob download-batch " f"-d {self.destination} " f"-s {self.source}"
         non_default = {
-            "--connection-string": self.connection_string,
+            **self._cli_auth_flags(),
             "--pattern": pattern,
         }
 
-        for flag, value in non_default.items():
-            if value:
-                cmd = f"{cmd} {flag} '{value}'"
-
-        os.system(cmd)
+        self._run_cli(cmd, non_default)
 
     def _download_single(self):
-        blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
+        blob_service_client = self._get_blob_service_client()
         container_client = blob_service_client.get_container_client(container=self.source)
         blob_list = container_client.list_blobs(name_starts_with=self.folder)
 
