@@ -9,6 +9,9 @@ Changelog
 - `method="batch"` runs the Azure CLI with `--account-name` and `--auth-mode login` in passwordless mode.
 - Download links are user delegation SAS URLs in passwordless mode, valid for at most 7 days.
 - `expiry_download_links` has to be a positive number of days; it is checked when download links are created.
+- `method="batch"` raises a `RuntimeError` when the Azure CLI command fails, instead of continuing silently.
+- Connection strings are parsed per segment, so `AccountKey` can be the last segment. A connection string without
+`AccountName` or `AccountKey` raises a clear `ValueError`.
 - Connection string and account key keep working and take precedence when set.
 - New dependency: `azure-identity`.
 

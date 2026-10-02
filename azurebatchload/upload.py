@@ -36,11 +36,7 @@ class Upload(Base):
 
         non_default = {"-d": self.blob_folder, **self._cli_auth_flags()}
 
-        for flag, value in non_default.items():
-            if value:
-                cmd = f"{cmd} {flag} '{value}'"
-
-        os.system(cmd)
+        self._run_cli(cmd, non_default)
 
     def upload_single(self):
         blob_service_client = self._get_blob_service_client()

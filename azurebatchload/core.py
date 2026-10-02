@@ -1,3 +1,4 @@
+import subprocess
 from datetime import datetime, timedelta, timezone
 
 from azure.identity import DefaultAzureCredential
@@ -72,6 +73,27 @@ class Base(Checks):
 
         # passwordless: az uses its own session (az login / az login --identity)
         return {"--account-name": self.account_name, "--auth-mode": "login"}
+
+    @staticmethod
+    def _run_cli(command, flags):
+        """
+        Run an Azure CLI command and raise when it fails, instead of continuing as if it worked.
+
+        Parameters
+        ----------
+        command: the az command with its positional arguments
+        flags: optional flags, flags with an empty value are left out
+        """
+        cmd = command
+        for flag, value in flags.items():
+            if value:
+                cmd = f"{cmd} {flag} '{value}'"
+
+        exit_code = subprocess.run(cmd, shell=True).returncode
+        if exit_code != 0:
+            # cmd can hold a connection string, so only name the az command itself
+            name = command.split(" -")[0]
+            raise RuntimeError(f"{name} failed with exit code {exit_code}, see the Azure CLI output above.")
 
     def _check_link_expiry(self):
         if self.expiry_download_links <= 0:

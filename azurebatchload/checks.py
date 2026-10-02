@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 from subprocess import STDOUT, CalledProcessError, check_output
 
 
@@ -100,7 +99,16 @@ class Checks:
 
     @staticmethod
     def _parse_connection_string(connection_string):
-        account_name = re.search(r"AccountName=(.*?);", connection_string).group(1)
-        account_key = re.search(r"AccountKey=(.*?);", connection_string).group(1)
+        # split per segment, not per regex: AccountKey can be the last segment and ends in "=" padding
+        segments = (segment.split("=", 1) for segment in connection_string.split(";") if "=" in segment)
+        settings = {key.strip().lower(): value.strip() for key, value in segments}
+
+        account_name = settings.get("accountname")
+        account_key = settings.get("accountkey")
+        if not account_name or not account_key:
+            raise ValueError(
+                "AZURE_STORAGE_CONNECTION_STRING needs both AccountName and AccountKey. "
+                "For passwordless authentication set only AZURE_STORAGE_ACCOUNT."
+            )
 
         return account_name, account_key

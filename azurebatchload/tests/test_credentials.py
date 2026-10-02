@@ -1,3 +1,4 @@
+import subprocess
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -109,15 +110,79 @@ def test_cli_auth_flags_connection_string(monkeypatch):
     assert flags == {"--connection-string": CONNECTION_STRING}
 
 
+def stub_cli(monkeypatch, exit_code=0):
+    """Stub the az subprocess (network, login) and record each command. Patch after constructing objects."""
+    commands = []
+
+    def run(cmd, **kwargs):
+        commands.append(cmd)
+        return subprocess.CompletedProcess(cmd, exit_code)
+
+    monkeypatch.setattr("azurebatchload.core.subprocess.run", run)
+    return commands
+
+
 def test_download_batch_command_is_passwordless(monkeypatch, tmp_path):
     monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "acct")
-    commands = []
-    monkeypatch.setattr("azurebatchload.download.os.system", commands.append)
+    download = Download(destination=str(tmp_path), source="container", extension=".pdf")
+    commands = stub_cli(monkeypatch)
 
-    Download(destination=str(tmp_path), source="container", extension=".pdf")._download_batch()
+    download._download_batch()
 
     assert "--account-name 'acct' --auth-mode 'login'" in commands[0]
     assert "--connection-string" not in commands[0]
+
+
+def test_upload_batch_raises_when_cli_fails(monkeypatch, tmp_path):
+    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "acct")
+    upload = Upload(destination="container", source=str(tmp_path), method="batch")
+    stub_cli(monkeypatch, exit_code=1)
+
+    with pytest.raises(RuntimeError, match="az storage fs directory upload failed with exit code 1"):
+        upload.upload_batch()
+
+
+def test_cli_failure_raises_with_exit_code(monkeypatch):
+    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "acct")
+
+    with pytest.raises(RuntimeError, match="exit code 3"):
+        Base(destination="container", folder=None)._run_cli("exit 3", {})
+
+
+def test_cli_failure_message_hides_connection_string(monkeypatch):
+    monkeypatch.setenv("AZURE_STORAGE_CONNECTION_STRING", CONNECTION_STRING)
+    base = Base(destination="container", folder=None)
+
+    with pytest.raises(RuntimeError) as error:
+        base._run_cli("false", base._cli_auth_flags())
+    assert ACCOUNT_KEY not in str(error.value)
+
+
+def test_cli_success_does_not_raise(monkeypatch):
+    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "acct")
+
+    Base(destination="container", folder=None)._run_cli("true", {})
+
+
+def test_connection_string_ending_with_account_key(monkeypatch):
+    monkeypatch.setenv(
+        "AZURE_STORAGE_CONNECTION_STRING",
+        "DefaultEndpointsProtocol=https;AccountName=acct;AccountKey=a2V5eQ==",
+    )
+
+    _, account_name, account_key = Checks(directory=None)._check_connection_credentials()
+
+    assert (account_name, account_key) == ("acct", "a2V5eQ==")
+
+
+def test_connection_string_without_account_key_raises_clear_error(monkeypatch):
+    monkeypatch.setenv(
+        "AZURE_STORAGE_CONNECTION_STRING",
+        "BlobEndpoint=https://acct.blob.core.windows.net/;SharedAccessSignature=sv=2022-11-02&sig=abc",
+    )
+
+    with pytest.raises(ValueError, match="AccountKey"):
+        Checks(directory=None)._check_connection_credentials()
 
 
 def test_blob_link_is_user_delegation_sas_when_passwordless(monkeypatch, delegation_key_requests):
