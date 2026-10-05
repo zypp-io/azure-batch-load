@@ -29,6 +29,28 @@ class Checks:
 
         return connection_string
 
+    @staticmethod
+    def _create_sas_connection_string():
+        """
+        When AZURE_STORAGE_ACCOUNT and AZURE_STORAGE_SAS_TOKEN are given,
+        create an AZURE_STORAGE_CONNECTION_STRING
+
+        Returns
+        -------
+        connection_string
+        """
+        account_name = os.environ.get("AZURE_STORAGE_ACCOUNT", None)
+        sas_token = (os.environ.get("AZURE_STORAGE_SAS_TOKEN", None),)
+        base_string = (
+            f"SharedAccessSignature={sas_token};"
+            f"BlobEndpoint=https://{account_name}.blob.core.windows.net/;"
+            f"FileEndpoint=https://{account_name}.file.core.windows.net/;"
+            f"QueueEndpoint=https://zyppstorage.queue.core.windows.net/;"
+            f"TableEndpoint=https://zyppstorage.table.core.windows.net/;"
+        )
+
+        return base_string
+
     def _check_connection_credentials(self):
         """
         If connection string is given as env variable return it,
@@ -43,17 +65,21 @@ class Checks:
         connection_string = os.environ.get("AZURE_STORAGE_CONNECTION_STRING", None)
         account_name = os.environ.get("AZURE_STORAGE_ACCOUNT", None)
         account_key = os.environ.get("AZURE_STORAGE_KEY", None)
+        sas_token = os.environ.get("AZURE_STORAGE_SAS_TOKEN", None)
 
         if connection_string:
             account_name, account_key = self._parse_connection_string(connection_string)
             return os.environ.get("AZURE_STORAGE_CONNECTION_STRING"), account_name, account_key
         elif all([account_name, account_key]):
             return self._create_connection_string(), account_name, account_key
+        elif all([account_name, sas_token]):
+            return self._create_sas_connection_string(sas_token), account_name, sas_token
         else:
             # check for env variables else raise
             raise ValueError(
                 "If AZURE_STORAGE_CONNECTION_STRING is not set as env variable "
-                " AZURE_STORAGE_KEY and AZURE_STORAGE_ACCOUNT have to be set."
+                " AZURE_STORAGE_KEY and AZURE_STORAGE_ACCOUNT have to be set or AZURE_STORAGE_ACCOUNT and "
+                "AZURE_STORAGE_SAS_TOKEN."
             )
 
     def _check_dir(self):
